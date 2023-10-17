@@ -1,0 +1,782 @@
+2023-10-17 18:36:05,665{GMT}	INFO	[jepsen test runner] jepsen.core: Command line:
+lein run test -w echo --bin ./target/debug/maelstrom-echo --node-count 1 --time-limit 10
+2023-10-17 18:36:05,782{GMT}	INFO	[jepsen test runner] jepsen.core: Running test:
+{:args []
+ :remote
+ #jepsen.control.retry.Remote{:remote #jepsen.control.scp.Remote{:cmd-remote #jepsen.control.sshj.SSHJRemote{:concurrency-limit 6,
+                                                                                                             :conn-spec nil,
+                                                                                                             :client nil,
+                                                                                                             :semaphore nil},
+                                                                 :conn-spec nil},
+                              :conn nil}
+ :log-net-send false
+ :node-count 1
+ :availability nil
+ :max-txn-length 4
+ :concurrency 1
+ :db
+ #object[maelstrom.db$db$reify__16142
+         "0x11736ebc"
+         "maelstrom.db$db$reify__16142@11736ebc"]
+ :max-writes-per-key 16
+ :leave-db-running? false
+ :name "echo"
+ :logging-json? false
+ :start-time
+ #object[org.joda.time.DateTime "0x50a1c2f3" "2023-10-17T18:36:05.632+02:00"]
+ :nemesis-interval 10
+ :net
+ #object[maelstrom.net$jepsen_net$reify__15251
+         "0x453ca7f"
+         "maelstrom.net$jepsen_net$reify__15251@453ca7f"]
+ :client
+ #object[maelstrom.workload.echo$client$reify__16863
+         "0x5d41b929"
+         "maelstrom.workload.echo$client$reify__16863@5d41b929"]
+ :barrier
+ #object[java.util.concurrent.CyclicBarrier
+         "0x6dd0e2f4"
+         "java.util.concurrent.CyclicBarrier@6dd0e2f4"]
+ :log-stderr false
+ :pure-generators true
+ :ssh {:dummy? true}
+ :rate 5
+ :checker
+ #object[jepsen.checker$compose$reify__11881
+         "0x333813e7"
+         "jepsen.checker$compose$reify__11881@333813e7"]
+ :argv
+ ("test"
+  "-w"
+  "echo"
+  "--bin"
+  "./target/debug/maelstrom-echo"
+  "--node-count"
+  "1"
+  "--time-limit"
+  "10")
+ :nemesis
+ (jepsen.nemesis.ReflCompose
+  {:fm {:start-partition 0,
+        :stop-partition 0,
+        :kill 1,
+        :start 1,
+        :pause 1,
+        :resume 1},
+   :nemeses [#unprintable "jepsen.nemesis.combined$partition_nemesis$reify__16416@292237cd"
+             #unprintable "jepsen.nemesis.combined$db_nemesis$reify__16397@797a5b31"]})
+ :nodes ["n0"]
+ :test-count 1
+ :latency {:mean 0, :dist :constant}
+ :bin "./target/debug/maelstrom-echo"
+ :generator
+ (jepsen.generator.TimeLimit
+  {:limit 10000000000,
+   :cutoff nil,
+   :gen (jepsen.generator.Any
+         {:gens [(jepsen.generator.OnThreads
+                  {:f #{:nemesis},
+                   :context-filter #object[jepsen.generator.context$make_thread_filter$lazy_filter__9167
+                                           "0xd7645b2"
+                                           "jepsen.generator.context$make_thread_filter$lazy_filter__9167@d7645b2"],
+                   :gen nil})
+                 (jepsen.generator.OnThreads
+                  {:f #jepsen.generator.context.AllBut{:element :nemesis},
+                   :context-filter #object[jepsen.generator.context$make_thread_filter$lazy_filter__9167
+                                           "0x72e4905c"
+                                           "jepsen.generator.context$make_thread_filter$lazy_filter__9167@72e4905c"],
+                   :gen (jepsen.generator.Stagger
+                         {:dt 400000000,
+                          :next-time nil,
+                          :gen (jepsen.generator.EachThread
+                                {:fresh-gen #object[maelstrom.workload.echo$workload$fn__16882
+                                                    "0x279b83ea"
+                                                    "maelstrom.workload.echo$workload$fn__16882@279b83ea"],
+                                 :context-filters #object[clojure.core$promise$reify__8591
+                                                          "0x7f9083b4"
+                                                          {:status :pending,
+                                                           :val nil}],
+                                 :gens {}})})})]})})
+ :log-net-recv false
+ :os
+ #object[maelstrom.net$jepsen_os$reify__15254
+         "0x40f40221"
+         "maelstrom.net$jepsen_os$reify__15254@40f40221"]
+ :time-limit 10
+ :workload :echo
+ :consistency-models [:strict-serializable]
+ :topology :grid}
+
+2023-10-17 18:36:09,542{GMT}	INFO	[jepsen node n0] maelstrom.net: Starting Maelstrom network
+2023-10-17 18:36:09,544{GMT}	INFO	[jepsen test runner] jepsen.db: Tearing down DB
+2023-10-17 18:36:09,549{GMT}	INFO	[jepsen test runner] jepsen.db: Setting up DB
+2023-10-17 18:36:09,554{GMT}	INFO	[jepsen node n0] maelstrom.service: Starting services: (lin-kv lin-tso lww-kv seq-kv)
+2023-10-17 18:36:09,557{GMT}	INFO	[jepsen node n0] maelstrom.db: Setting up n0
+2023-10-17 18:36:09,559{GMT}	INFO	[jepsen node n0] maelstrom.process: launching ./target/debug/maelstrom-echo []
+2023-10-17 18:36:09,598{GMT}	INFO	[jepsen test runner] jepsen.core: Relative time begins now
+2023-10-17 18:36:09,633{GMT}	INFO	[jepsen worker 0] jepsen.util: 0	:invoke	:echo	"Please echo 31"
+2023-10-17 18:36:09,670{GMT}	WARN	[jepsen worker 0] jepsen.generator.interpreter: Process 0 crashed
+clojure.lang.ExceptionInfo: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 31", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 2, :in_reply_to 1, :type "echo", :echo "Please echo 31"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+	at slingshot.support$stack_trace.invoke(support.clj:201)
+	at maelstrom.client$check_body.invokeStatic(client.clj:188)
+	at maelstrom.client$check_body.invoke(client.clj:181)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$client$reify__16863.invoke_BANG_(echo.clj:36)
+	at jepsen.client.Validate.invoke_BANG_(client.clj:83)
+	at jepsen.generator.interpreter.ClientWorker.invoke_BANG_(interpreter.clj:65)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908$fn__12909.invoke(interpreter.clj:140)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908.invoke(interpreter.clj:123)
+	at clojure.core$binding_conveyor_fn$fn__5823.invoke(core.clj:2047)
+	at clojure.lang.AFn.call(AFn.java:18)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2023-10-17 18:36:09,863{GMT}	INFO	[jepsen worker 0] jepsen.util: 1	:invoke	:echo	"Please echo 85"
+2023-10-17 18:36:09,887{GMT}	WARN	[jepsen worker 0] jepsen.generator.interpreter: Process 1 crashed
+clojure.lang.ExceptionInfo: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 85", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 4, :in_reply_to 1, :type "echo", :echo "Please echo 85"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+	at slingshot.support$stack_trace.invoke(support.clj:201)
+	at maelstrom.client$check_body.invokeStatic(client.clj:188)
+	at maelstrom.client$check_body.invoke(client.clj:181)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$client$reify__16863.invoke_BANG_(echo.clj:36)
+	at jepsen.client.Validate.invoke_BANG_(client.clj:83)
+	at jepsen.generator.interpreter.ClientWorker.invoke_BANG_(interpreter.clj:65)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908$fn__12909.invoke(interpreter.clj:140)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908.invoke(interpreter.clj:123)
+	at clojure.core$binding_conveyor_fn$fn__5823.invoke(core.clj:2047)
+	at clojure.lang.AFn.call(AFn.java:18)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2023-10-17 18:36:10,226{GMT}	INFO	[jepsen worker 0] jepsen.util: 2	:invoke	:echo	"Please echo 123"
+2023-10-17 18:36:10,262{GMT}	WARN	[jepsen worker 0] jepsen.generator.interpreter: Process 2 crashed
+clojure.lang.ExceptionInfo: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 123", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 6, :in_reply_to 1, :type "echo", :echo "Please echo 123"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+	at slingshot.support$stack_trace.invoke(support.clj:201)
+	at maelstrom.client$check_body.invokeStatic(client.clj:188)
+	at maelstrom.client$check_body.invoke(client.clj:181)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$client$reify__16863.invoke_BANG_(echo.clj:36)
+	at jepsen.client.Validate.invoke_BANG_(client.clj:83)
+	at jepsen.generator.interpreter.ClientWorker.invoke_BANG_(interpreter.clj:65)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908$fn__12909.invoke(interpreter.clj:140)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908.invoke(interpreter.clj:123)
+	at clojure.core$binding_conveyor_fn$fn__5823.invoke(core.clj:2047)
+	at clojure.lang.AFn.call(AFn.java:18)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2023-10-17 18:36:10,557{GMT}	INFO	[jepsen worker 0] jepsen.util: 3	:invoke	:echo	"Please echo 115"
+2023-10-17 18:36:10,589{GMT}	WARN	[jepsen worker 0] jepsen.generator.interpreter: Process 3 crashed
+clojure.lang.ExceptionInfo: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 115", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 8, :in_reply_to 1, :type "echo", :echo "Please echo 115"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+	at slingshot.support$stack_trace.invoke(support.clj:201)
+	at maelstrom.client$check_body.invokeStatic(client.clj:188)
+	at maelstrom.client$check_body.invoke(client.clj:181)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$client$reify__16863.invoke_BANG_(echo.clj:36)
+	at jepsen.client.Validate.invoke_BANG_(client.clj:83)
+	at jepsen.generator.interpreter.ClientWorker.invoke_BANG_(interpreter.clj:65)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908$fn__12909.invoke(interpreter.clj:140)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908.invoke(interpreter.clj:123)
+	at clojure.core$binding_conveyor_fn$fn__5823.invoke(core.clj:2047)
+	at clojure.lang.AFn.call(AFn.java:18)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2023-10-17 18:36:10,910{GMT}	INFO	[jepsen worker 0] jepsen.util: 4	:invoke	:echo	"Please echo 3"
+2023-10-17 18:36:10,933{GMT}	WARN	[jepsen worker 0] jepsen.generator.interpreter: Process 4 crashed
+clojure.lang.ExceptionInfo: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 3", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 10, :in_reply_to 1, :type "echo", :echo "Please echo 3"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+	at slingshot.support$stack_trace.invoke(support.clj:201)
+	at maelstrom.client$check_body.invokeStatic(client.clj:188)
+	at maelstrom.client$check_body.invoke(client.clj:181)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$client$reify__16863.invoke_BANG_(echo.clj:36)
+	at jepsen.client.Validate.invoke_BANG_(client.clj:83)
+	at jepsen.generator.interpreter.ClientWorker.invoke_BANG_(interpreter.clj:65)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908$fn__12909.invoke(interpreter.clj:140)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908.invoke(interpreter.clj:123)
+	at clojure.core$binding_conveyor_fn$fn__5823.invoke(core.clj:2047)
+	at clojure.lang.AFn.call(AFn.java:18)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2023-10-17 18:36:11,225{GMT}	INFO	[jepsen worker 0] jepsen.util: 5	:invoke	:echo	"Please echo 63"
+2023-10-17 18:36:11,256{GMT}	WARN	[jepsen worker 0] jepsen.generator.interpreter: Process 5 crashed
+clojure.lang.ExceptionInfo: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 63", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 12, :in_reply_to 1, :type "echo", :echo "Please echo 63"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+	at slingshot.support$stack_trace.invoke(support.clj:201)
+	at maelstrom.client$check_body.invokeStatic(client.clj:188)
+	at maelstrom.client$check_body.invoke(client.clj:181)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$client$reify__16863.invoke_BANG_(echo.clj:36)
+	at jepsen.client.Validate.invoke_BANG_(client.clj:83)
+	at jepsen.generator.interpreter.ClientWorker.invoke_BANG_(interpreter.clj:65)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908$fn__12909.invoke(interpreter.clj:140)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908.invoke(interpreter.clj:123)
+	at clojure.core$binding_conveyor_fn$fn__5823.invoke(core.clj:2047)
+	at clojure.lang.AFn.call(AFn.java:18)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2023-10-17 18:36:11,267{GMT}	INFO	[jepsen worker 0] jepsen.util: 6	:invoke	:echo	"Please echo 78"
+2023-10-17 18:36:11,294{GMT}	WARN	[jepsen worker 0] jepsen.generator.interpreter: Process 6 crashed
+clojure.lang.ExceptionInfo: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 78", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 14, :in_reply_to 1, :type "echo", :echo "Please echo 78"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+	at slingshot.support$stack_trace.invoke(support.clj:201)
+	at maelstrom.client$check_body.invokeStatic(client.clj:188)
+	at maelstrom.client$check_body.invoke(client.clj:181)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$client$reify__16863.invoke_BANG_(echo.clj:36)
+	at jepsen.client.Validate.invoke_BANG_(client.clj:83)
+	at jepsen.generator.interpreter.ClientWorker.invoke_BANG_(interpreter.clj:65)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908$fn__12909.invoke(interpreter.clj:140)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908.invoke(interpreter.clj:123)
+	at clojure.core$binding_conveyor_fn$fn__5823.invoke(core.clj:2047)
+	at clojure.lang.AFn.call(AFn.java:18)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2023-10-17 18:36:11,529{GMT}	INFO	[jepsen worker 0] jepsen.util: 7	:invoke	:echo	"Please echo 99"
+2023-10-17 18:36:11,570{GMT}	WARN	[jepsen worker 0] jepsen.generator.interpreter: Process 7 crashed
+clojure.lang.ExceptionInfo: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 99", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 16, :in_reply_to 1, :type "echo", :echo "Please echo 99"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+	at slingshot.support$stack_trace.invoke(support.clj:201)
+	at maelstrom.client$check_body.invokeStatic(client.clj:188)
+	at maelstrom.client$check_body.invoke(client.clj:181)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$client$reify__16863.invoke_BANG_(echo.clj:36)
+	at jepsen.client.Validate.invoke_BANG_(client.clj:83)
+	at jepsen.generator.interpreter.ClientWorker.invoke_BANG_(interpreter.clj:65)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908$fn__12909.invoke(interpreter.clj:140)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908.invoke(interpreter.clj:123)
+	at clojure.core$binding_conveyor_fn$fn__5823.invoke(core.clj:2047)
+	at clojure.lang.AFn.call(AFn.java:18)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2023-10-17 18:36:11,572{GMT}	INFO	[jepsen worker 0] jepsen.util: 8	:invoke	:echo	"Please echo 34"
+2023-10-17 18:36:11,597{GMT}	WARN	[jepsen worker 0] jepsen.generator.interpreter: Process 8 crashed
+clojure.lang.ExceptionInfo: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 34", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 18, :in_reply_to 1, :type "echo", :echo "Please echo 34"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+	at slingshot.support$stack_trace.invoke(support.clj:201)
+	at maelstrom.client$check_body.invokeStatic(client.clj:188)
+	at maelstrom.client$check_body.invoke(client.clj:181)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$client$reify__16863.invoke_BANG_(echo.clj:36)
+	at jepsen.client.Validate.invoke_BANG_(client.clj:83)
+	at jepsen.generator.interpreter.ClientWorker.invoke_BANG_(interpreter.clj:65)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908$fn__12909.invoke(interpreter.clj:140)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908.invoke(interpreter.clj:123)
+	at clojure.core$binding_conveyor_fn$fn__5823.invoke(core.clj:2047)
+	at clojure.lang.AFn.call(AFn.java:18)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2023-10-17 18:36:11,945{GMT}	INFO	[jepsen worker 0] jepsen.util: 9	:invoke	:echo	"Please echo 97"
+2023-10-17 18:36:11,962{GMT}	WARN	[jepsen worker 0] jepsen.generator.interpreter: Process 9 crashed
+clojure.lang.ExceptionInfo: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 97", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 20, :in_reply_to 1, :type "echo", :echo "Please echo 97"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+	at slingshot.support$stack_trace.invoke(support.clj:201)
+	at maelstrom.client$check_body.invokeStatic(client.clj:188)
+	at maelstrom.client$check_body.invoke(client.clj:181)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$client$reify__16863.invoke_BANG_(echo.clj:36)
+	at jepsen.client.Validate.invoke_BANG_(client.clj:83)
+	at jepsen.generator.interpreter.ClientWorker.invoke_BANG_(interpreter.clj:65)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908$fn__12909.invoke(interpreter.clj:140)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908.invoke(interpreter.clj:123)
+	at clojure.core$binding_conveyor_fn$fn__5823.invoke(core.clj:2047)
+	at clojure.lang.AFn.call(AFn.java:18)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2023-10-17 18:36:12,180{GMT}	INFO	[jepsen worker 0] jepsen.util: 10	:invoke	:echo	"Please echo 94"
+2023-10-17 18:36:12,199{GMT}	WARN	[jepsen worker 0] jepsen.generator.interpreter: Process 10 crashed
+clojure.lang.ExceptionInfo: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 94", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 22, :in_reply_to 1, :type "echo", :echo "Please echo 94"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+	at slingshot.support$stack_trace.invoke(support.clj:201)
+	at maelstrom.client$check_body.invokeStatic(client.clj:188)
+	at maelstrom.client$check_body.invoke(client.clj:181)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$client$reify__16863.invoke_BANG_(echo.clj:36)
+	at jepsen.client.Validate.invoke_BANG_(client.clj:83)
+	at jepsen.generator.interpreter.ClientWorker.invoke_BANG_(interpreter.clj:65)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908$fn__12909.invoke(interpreter.clj:140)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908.invoke(interpreter.clj:123)
+	at clojure.core$binding_conveyor_fn$fn__5823.invoke(core.clj:2047)
+	at clojure.lang.AFn.call(AFn.java:18)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2023-10-17 18:36:12,350{GMT}	INFO	[jepsen worker 0] jepsen.util: 11	:invoke	:echo	"Please echo 65"
+2023-10-17 18:36:12,380{GMT}	WARN	[jepsen worker 0] jepsen.generator.interpreter: Process 11 crashed
+clojure.lang.ExceptionInfo: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 65", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 24, :in_reply_to 1, :type "echo", :echo "Please echo 65"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+	at slingshot.support$stack_trace.invoke(support.clj:201)
+	at maelstrom.client$check_body.invokeStatic(client.clj:188)
+	at maelstrom.client$check_body.invoke(client.clj:181)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$client$reify__16863.invoke_BANG_(echo.clj:36)
+	at jepsen.client.Validate.invoke_BANG_(client.clj:83)
+	at jepsen.generator.interpreter.ClientWorker.invoke_BANG_(interpreter.clj:65)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908$fn__12909.invoke(interpreter.clj:140)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908.invoke(interpreter.clj:123)
+	at clojure.core$binding_conveyor_fn$fn__5823.invoke(core.clj:2047)
+	at clojure.lang.AFn.call(AFn.java:18)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2023-10-17 18:36:12,613{GMT}	INFO	[jepsen worker 0] jepsen.util: 12	:invoke	:echo	"Please echo 119"
+2023-10-17 18:36:12,643{GMT}	WARN	[jepsen worker 0] jepsen.generator.interpreter: Process 12 crashed
+clojure.lang.ExceptionInfo: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 119", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 26, :in_reply_to 1, :type "echo", :echo "Please echo 119"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+	at slingshot.support$stack_trace.invoke(support.clj:201)
+	at maelstrom.client$check_body.invokeStatic(client.clj:188)
+	at maelstrom.client$check_body.invoke(client.clj:181)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$client$reify__16863.invoke_BANG_(echo.clj:36)
+	at jepsen.client.Validate.invoke_BANG_(client.clj:83)
+	at jepsen.generator.interpreter.ClientWorker.invoke_BANG_(interpreter.clj:65)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908$fn__12909.invoke(interpreter.clj:140)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908.invoke(interpreter.clj:123)
+	at clojure.core$binding_conveyor_fn$fn__5823.invoke(core.clj:2047)
+	at clojure.lang.AFn.call(AFn.java:18)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2023-10-17 18:36:13,005{GMT}	INFO	[jepsen worker 0] jepsen.util: 13	:invoke	:echo	"Please echo 7"
+2023-10-17 18:36:13,020{GMT}	WARN	[jepsen worker 0] jepsen.generator.interpreter: Process 13 crashed
+clojure.lang.ExceptionInfo: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 7", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 28, :in_reply_to 1, :type "echo", :echo "Please echo 7"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+	at slingshot.support$stack_trace.invoke(support.clj:201)
+	at maelstrom.client$check_body.invokeStatic(client.clj:188)
+	at maelstrom.client$check_body.invoke(client.clj:181)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$client$reify__16863.invoke_BANG_(echo.clj:36)
+	at jepsen.client.Validate.invoke_BANG_(client.clj:83)
+	at jepsen.generator.interpreter.ClientWorker.invoke_BANG_(interpreter.clj:65)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908$fn__12909.invoke(interpreter.clj:140)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908.invoke(interpreter.clj:123)
+	at clojure.core$binding_conveyor_fn$fn__5823.invoke(core.clj:2047)
+	at clojure.lang.AFn.call(AFn.java:18)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2023-10-17 18:36:13,210{GMT}	INFO	[jepsen worker 0] jepsen.util: 14	:invoke	:echo	"Please echo 69"
+2023-10-17 18:36:13,229{GMT}	WARN	[jepsen worker 0] jepsen.generator.interpreter: Process 14 crashed
+clojure.lang.ExceptionInfo: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 69", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 30, :in_reply_to 1, :type "echo", :echo "Please echo 69"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+	at slingshot.support$stack_trace.invoke(support.clj:201)
+	at maelstrom.client$check_body.invokeStatic(client.clj:188)
+	at maelstrom.client$check_body.invoke(client.clj:181)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$client$reify__16863.invoke_BANG_(echo.clj:36)
+	at jepsen.client.Validate.invoke_BANG_(client.clj:83)
+	at jepsen.generator.interpreter.ClientWorker.invoke_BANG_(interpreter.clj:65)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908$fn__12909.invoke(interpreter.clj:140)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908.invoke(interpreter.clj:123)
+	at clojure.core$binding_conveyor_fn$fn__5823.invoke(core.clj:2047)
+	at clojure.lang.AFn.call(AFn.java:18)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2023-10-17 18:36:13,345{GMT}	INFO	[jepsen worker 0] jepsen.util: 15	:invoke	:echo	"Please echo 83"
+2023-10-17 18:36:13,364{GMT}	WARN	[jepsen worker 0] jepsen.generator.interpreter: Process 15 crashed
+clojure.lang.ExceptionInfo: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 83", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 32, :in_reply_to 1, :type "echo", :echo "Please echo 83"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+	at slingshot.support$stack_trace.invoke(support.clj:201)
+	at maelstrom.client$check_body.invokeStatic(client.clj:188)
+	at maelstrom.client$check_body.invoke(client.clj:181)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$client$reify__16863.invoke_BANG_(echo.clj:36)
+	at jepsen.client.Validate.invoke_BANG_(client.clj:83)
+	at jepsen.generator.interpreter.ClientWorker.invoke_BANG_(interpreter.clj:65)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908$fn__12909.invoke(interpreter.clj:140)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908.invoke(interpreter.clj:123)
+	at clojure.core$binding_conveyor_fn$fn__5823.invoke(core.clj:2047)
+	at clojure.lang.AFn.call(AFn.java:18)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2023-10-17 18:36:13,707{GMT}	INFO	[jepsen worker 0] jepsen.util: 16	:invoke	:echo	"Please echo 94"
+2023-10-17 18:36:13,729{GMT}	WARN	[jepsen worker 0] jepsen.generator.interpreter: Process 16 crashed
+clojure.lang.ExceptionInfo: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 94", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 34, :in_reply_to 1, :type "echo", :echo "Please echo 94"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+	at slingshot.support$stack_trace.invoke(support.clj:201)
+	at maelstrom.client$check_body.invokeStatic(client.clj:188)
+	at maelstrom.client$check_body.invoke(client.clj:181)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$client$reify__16863.invoke_BANG_(echo.clj:36)
+	at jepsen.client.Validate.invoke_BANG_(client.clj:83)
+	at jepsen.generator.interpreter.ClientWorker.invoke_BANG_(interpreter.clj:65)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908$fn__12909.invoke(interpreter.clj:140)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908.invoke(interpreter.clj:123)
+	at clojure.core$binding_conveyor_fn$fn__5823.invoke(core.clj:2047)
+	at clojure.lang.AFn.call(AFn.java:18)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2023-10-17 18:36:14,024{GMT}	INFO	[jepsen worker 0] jepsen.util: 17	:invoke	:echo	"Please echo 29"
+2023-10-17 18:36:14,051{GMT}	WARN	[jepsen worker 0] jepsen.generator.interpreter: Process 17 crashed
+clojure.lang.ExceptionInfo: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 29", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 36, :in_reply_to 1, :type "echo", :echo "Please echo 29"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+	at slingshot.support$stack_trace.invoke(support.clj:201)
+	at maelstrom.client$check_body.invokeStatic(client.clj:188)
+	at maelstrom.client$check_body.invoke(client.clj:181)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$client$reify__16863.invoke_BANG_(echo.clj:36)
+	at jepsen.client.Validate.invoke_BANG_(client.clj:83)
+	at jepsen.generator.interpreter.ClientWorker.invoke_BANG_(interpreter.clj:65)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908$fn__12909.invoke(interpreter.clj:140)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908.invoke(interpreter.clj:123)
+	at clojure.core$binding_conveyor_fn$fn__5823.invoke(core.clj:2047)
+	at clojure.lang.AFn.call(AFn.java:18)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2023-10-17 18:36:14,318{GMT}	INFO	[jepsen worker 0] jepsen.util: 18	:invoke	:echo	"Please echo 81"
+2023-10-17 18:36:14,333{GMT}	WARN	[jepsen worker 0] jepsen.generator.interpreter: Process 18 crashed
+clojure.lang.ExceptionInfo: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 81", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 38, :in_reply_to 1, :type "echo", :echo "Please echo 81"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+	at slingshot.support$stack_trace.invoke(support.clj:201)
+	at maelstrom.client$check_body.invokeStatic(client.clj:188)
+	at maelstrom.client$check_body.invoke(client.clj:181)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$fn__16852$echo_BANG___16853.invoke(echo.clj:15)
+	at maelstrom.workload.echo$client$reify__16863.invoke_BANG_(echo.clj:36)
+	at jepsen.client.Validate.invoke_BANG_(client.clj:83)
+	at jepsen.generator.interpreter.ClientWorker.invoke_BANG_(interpreter.clj:65)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908$fn__12909.invoke(interpreter.clj:140)
+	at jepsen.generator.interpreter$spawn_worker$fn__12908.invoke(interpreter.clj:123)
+	at clojure.core$binding_conveyor_fn$fn__5823.invoke(core.clj:2047)
+	at clojure.lang.AFn.call(AFn.java:18)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+	at java.base/java.lang.Thread.run(Thread.java:833)
+2023-10-17 18:36:14,487{GMT}	INFO	[Jepsen shutdown hook] jepsen.core: Downloading DB logs before JVM shutdown...

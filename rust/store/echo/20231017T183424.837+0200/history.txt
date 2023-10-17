@@ -1,0 +1,810 @@
+0	:invoke	:echo	"Please echo 47"
+0	:info	:echo	"Please echo 47"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 47", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 2, :in_reply_to 1, :type "echo", :echo "Please echo 47"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+1	:invoke	:echo	"Please echo 36"
+1	:info	:echo	"Please echo 36"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 36", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 4, :in_reply_to 1, :type "echo", :echo "Please echo 36"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+2	:invoke	:echo	"Please echo 28"
+2	:info	:echo	"Please echo 28"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 28", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 6, :in_reply_to 1, :type "echo", :echo "Please echo 28"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+3	:invoke	:echo	"Please echo 26"
+3	:info	:echo	"Please echo 26"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 26", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 8, :in_reply_to 1, :type "echo", :echo "Please echo 26"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+4	:invoke	:echo	"Please echo 73"
+4	:info	:echo	"Please echo 73"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 73", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 10, :in_reply_to 1, :type "echo", :echo "Please echo 73"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+5	:invoke	:echo	"Please echo 88"
+5	:info	:echo	"Please echo 88"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 88", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 12, :in_reply_to 1, :type "echo", :echo "Please echo 88"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+6	:invoke	:echo	"Please echo 78"
+6	:info	:echo	"Please echo 78"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 78", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 14, :in_reply_to 1, :type "echo", :echo "Please echo 78"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+7	:invoke	:echo	"Please echo 51"
+7	:info	:echo	"Please echo 51"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 51", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 16, :in_reply_to 1, :type "echo", :echo "Please echo 51"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+8	:invoke	:echo	"Please echo 12"
+8	:info	:echo	"Please echo 12"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 12", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 18, :in_reply_to 1, :type "echo", :echo "Please echo 12"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+9	:invoke	:echo	"Please echo 21"
+9	:info	:echo	"Please echo 21"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 21", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 20, :in_reply_to 1, :type "echo", :echo "Please echo 21"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+10	:invoke	:echo	"Please echo 75"
+10	:info	:echo	"Please echo 75"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 75", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 22, :in_reply_to 1, :type "echo", :echo "Please echo 75"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+11	:invoke	:echo	"Please echo 114"
+11	:info	:echo	"Please echo 114"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 114", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 24, :in_reply_to 1, :type "echo", :echo "Please echo 114"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+12	:invoke	:echo	"Please echo 20"
+12	:info	:echo	"Please echo 20"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 20", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 26, :in_reply_to 1, :type "echo", :echo "Please echo 20"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+13	:invoke	:echo	"Please echo 48"
+13	:info	:echo	"Please echo 48"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 48", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 28, :in_reply_to 1, :type "echo", :echo "Please echo 48"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+14	:invoke	:echo	"Please echo 77"
+14	:info	:echo	"Please echo 77"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 77", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 30, :in_reply_to 1, :type "echo", :echo "Please echo 77"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+15	:invoke	:echo	"Please echo 64"
+15	:info	:echo	"Please echo 64"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 64", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 32, :in_reply_to 1, :type "echo", :echo "Please echo 64"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+16	:invoke	:echo	"Please echo 52"
+16	:info	:echo	"Please echo 52"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 52", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 34, :in_reply_to 1, :type "echo", :echo "Please echo 52"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+17	:invoke	:echo	"Please echo 99"
+17	:info	:echo	"Please echo 99"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 99", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 36, :in_reply_to 1, :type "echo", :echo "Please echo 99"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+18	:invoke	:echo	"Please echo 116"
+18	:info	:echo	"Please echo 116"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 116", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 38, :in_reply_to 1, :type "echo", :echo "Please echo 116"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+19	:invoke	:echo	"Please echo 27"
+19	:info	:echo	"Please echo 27"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 27", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 40, :in_reply_to 1, :type "echo", :echo "Please echo 27"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+20	:invoke	:echo	"Please echo 112"
+20	:info	:echo	"Please echo 112"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 112", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 42, :in_reply_to 1, :type "echo", :echo "Please echo 112"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+21	:invoke	:echo	"Please echo 67"
+21	:info	:echo	"Please echo 67"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 67", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 44, :in_reply_to 1, :type "echo", :echo "Please echo 67"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+22	:invoke	:echo	"Please echo 39"
+22	:info	:echo	"Please echo 39"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 39", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 46, :in_reply_to 1, :type "echo", :echo "Please echo 39"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+23	:invoke	:echo	"Please echo 38"
+23	:info	:echo	"Please echo 38"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 38", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 48, :in_reply_to 1, :type "echo", :echo "Please echo 38"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+24	:invoke	:echo	"Please echo 48"
+24	:info	:echo	"Please echo 48"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 48", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 50, :in_reply_to 1, :type "echo", :echo "Please echo 48"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+25	:invoke	:echo	"Please echo 34"
+25	:info	:echo	"Please echo 34"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 34", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 52, :in_reply_to 1, :type "echo", :echo "Please echo 34"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+26	:invoke	:echo	"Please echo 63"
+26	:info	:echo	"Please echo 63"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 63", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 54, :in_reply_to 1, :type "echo", :echo "Please echo 63"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+27	:invoke	:echo	"Please echo 68"
+27	:info	:echo	"Please echo 68"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 68", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 56, :in_reply_to 1, :type "echo", :echo "Please echo 68"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+28	:invoke	:echo	"Please echo 60"
+28	:info	:echo	"Please echo 60"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 60", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 58, :in_reply_to 1, :type "echo", :echo "Please echo 60"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+29	:invoke	:echo	"Please echo 1"
+29	:info	:echo	"Please echo 1"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 1", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 60, :in_reply_to 1, :type "echo", :echo "Please echo 1"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+30	:invoke	:echo	"Please echo 81"
+30	:info	:echo	"Please echo 81"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 81", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 62, :in_reply_to 1, :type "echo", :echo "Please echo 81"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+31	:invoke	:echo	"Please echo 28"
+31	:info	:echo	"Please echo 28"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 28", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 64, :in_reply_to 1, :type "echo", :echo "Please echo 28"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+32	:invoke	:echo	"Please echo 121"
+32	:info	:echo	"Please echo 121"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 121", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 66, :in_reply_to 1, :type "echo", :echo "Please echo 121"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+33	:invoke	:echo	"Please echo 101"
+33	:info	:echo	"Please echo 101"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 101", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 68, :in_reply_to 1, :type "echo", :echo "Please echo 101"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+34	:invoke	:echo	"Please echo 80"
+34	:info	:echo	"Please echo 80"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 80", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 70, :in_reply_to 1, :type "echo", :echo "Please echo 80"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+35	:invoke	:echo	"Please echo 109"
+35	:info	:echo	"Please echo 109"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 109", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 72, :in_reply_to 1, :type "echo", :echo "Please echo 109"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+36	:invoke	:echo	"Please echo 38"
+36	:info	:echo	"Please echo 38"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 38", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 74, :in_reply_to 1, :type "echo", :echo "Please echo 38"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+37	:invoke	:echo	"Please echo 92"
+37	:info	:echo	"Please echo 92"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 92", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 76, :in_reply_to 1, :type "echo", :echo "Please echo 92"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+38	:invoke	:echo	"Please echo 96"
+38	:info	:echo	"Please echo 96"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 96", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 78, :in_reply_to 1, :type "echo", :echo "Please echo 96"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+39	:invoke	:echo	"Please echo 106"
+39	:info	:echo	"Please echo 106"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 106", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 80, :in_reply_to 1, :type "echo", :echo "Please echo 106"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+40	:invoke	:echo	"Please echo 120"
+40	:info	:echo	"Please echo 120"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 120", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 82, :in_reply_to 1, :type "echo", :echo "Please echo 120"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+41	:invoke	:echo	"Please echo 51"
+41	:info	:echo	"Please echo 51"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 51", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 84, :in_reply_to 1, :type "echo", :echo "Please echo 51"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+42	:invoke	:echo	"Please echo 8"
+42	:info	:echo	"Please echo 8"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 8", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 86, :in_reply_to 1, :type "echo", :echo "Please echo 8"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+43	:invoke	:echo	"Please echo 61"
+43	:info	:echo	"Please echo 61"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 61", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 88, :in_reply_to 1, :type "echo", :echo "Please echo 61"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
+44	:invoke	:echo	"Please echo 94"
+44	:info	:echo	"Please echo 94"	indeterminate: Malformed RPC response. Maelstrom sent node n0 the following request:
+
+{:echo "Please echo 94", :type "echo", :msg_id 1}
+
+And expected a response of the form:
+
+{:type (eq "echo_ok"), :echo Any, {:k :msg_id} Int, :in_reply_to Int}
+
+... but instead received
+
+{:msg_id 90, :in_reply_to 1, :type "echo", :echo "Please echo 94"}
+
+This is malformed because:
+
+{:type (not (= "echo_ok" "echo"))}
+
+See doc/protocol.md for more guidance.
