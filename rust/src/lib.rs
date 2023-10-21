@@ -1,4 +1,4 @@
-use anyhow::Context;
+use anyhow::{Context, Ok};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::io::{BufRead, StdoutLock, Write};
 
@@ -10,7 +10,10 @@ pub struct Message<Payload> {
     pub body: Body<Payload>,
 }
 
-impl<Payload> Message<Payload> {
+impl<Payload> Message<Payload>
+where
+    Payload: Serialize,
+{
     pub fn into_reply(self, id: Option<&mut usize>) -> Self {
         Self {
             src: self.dst,
@@ -25,6 +28,15 @@ impl<Payload> Message<Payload> {
                 payload: self.body.payload,
             },
         }
+    }
+
+    pub fn send(self, output: &mut std::io::StdoutLock) -> anyhow::Result<()> {
+        serde_json::to_writer(&mut *output, &self)
+            .context("failed to serialize broadcast  reply")?;
+        output
+            .write_all(b"\n")
+            .context("failed to write new line")?;
+        Ok(())
     }
 }
 

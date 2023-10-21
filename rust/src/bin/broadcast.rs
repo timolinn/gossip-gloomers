@@ -1,7 +1,7 @@
 use anyhow::Context;
 use nazgul::*;
 
-use std::{collections::HashMap, io::Write};
+use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
@@ -52,32 +52,36 @@ impl Node<(), Payload> for BroadcastNode {
             Payload::Broadcast { message } => {
                 self.messages.push(message);
                 reply.body.payload = Payload::BroadcastOk;
-                serde_json::to_writer(&mut *output, &reply)
-                    .context("failed to serialize broadcast  reply")?;
-                output
-                    .write_all(b"\n")
-                    .context("failed to write new line")?;
+                reply.send(output).context("failed to send message")?;
+
+                for node in &self.neighbors {
+                    self.id += 1;
+                    let broad_msg = Message {
+                        src: self.node.clone(),
+                        dst: node.to_string(),
+                        body: Body {
+                            id: Some(self.id),
+                            in_reply_to: None,
+                            payload: Payload::Broadcast { message },
+                        },
+                    };
+                    broad_msg
+                        .send(output)
+                        .context(format!("failed to send message to node: {node}"))?
+                }
             }
             Payload::BroadcastOk => {}
             Payload::Read => {
                 reply.body.payload = Payload::ReadOk {
                     messages: self.messages.clone(),
                 };
-                serde_json::to_writer(&mut *output, &reply)
-                    .context("failed to serialize read reply")?;
-                output
-                    .write_all(b"\n")
-                    .context("failed to write new line")?;
+                reply.send(output).context("failed to send message")?;
             }
             Payload::ReadOk { .. } => {}
             Payload::Topology { topology } => {
                 self.neighbors = topology[&self.node].clone();
                 reply.body.payload = Payload::TopologyOk;
-                serde_json::to_writer(&mut *output, &reply)
-                    .context("failed to serialize topology reply")?;
-                output
-                    .write_all(b"\n")
-                    .context("failed to write new line")?;
+                reply.send(output).context("failed to send message")?;
             }
             Payload::TopologyOk => {}
         }
