@@ -1,10 +1,11 @@
-use std::io::Write;
+use std::{collections::HashMap, io::Write};
 
 use anyhow::{Context, Ok};
 use nazgul::*;
 
 use serde::{Deserialize, Serialize};
 
+#[derive(Clone)]
 struct UniqueIdNode {
     id: usize,
     node: String,
@@ -22,6 +23,10 @@ enum Payload {
 }
 
 impl Node<(), Payload> for UniqueIdNode {
+    fn get_un_acked_msgs(&self) -> std::collections::HashMap<usize, Message<Payload>> {
+        HashMap::new()
+    }
+
     fn from_init(_state: (), init: Init) -> anyhow::Result<Self>
     where
         Self: Sized,
@@ -36,6 +41,7 @@ impl Node<(), Payload> for UniqueIdNode {
         &mut self,
         input: Message<Payload>,
         output: &mut std::io::StdoutLock,
+        _tx: &std::sync::mpsc::Sender<MessageAckStatus<Payload>>,
     ) -> anyhow::Result<()> {
         let mut reply = input.into_reply(Some(&mut self.id));
         match reply.body.payload {
