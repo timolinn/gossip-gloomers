@@ -1,7 +1,7 @@
 use anyhow::{Context, Ok};
 use nazgul::*;
 
-use std::{collections::HashMap, thread, time::Duration};
+use std::{collections::HashMap, sync::mpsc::Sender, thread, time::Duration};
 
 use serde::{Deserialize, Serialize};
 
@@ -21,9 +21,8 @@ enum Payload {
     Broadcast {
         message: usize,
     },
-    BroadcastOk {
-        in_reply_to: Option<usize>,
-    },
+    BroadcastOk,
+    BroadcastUnAcked,
     Read,
     ReadOk {
         messages: Vec<usize>,
@@ -39,10 +38,26 @@ impl Node<(), Payload> for BroadcastNode {
         self.waiting_for_ack.clone()
     }
 
-    fn from_init(_state: (), init: Init) -> anyhow::Result<Self>
+    fn from_init(_state: (), init: Init, tx: Sender<Message<Payload>>) -> anyhow::Result<Self>
     where
         Self: Sized,
     {
+        let node_id = init.node_id.clone();
+        thread::spawn(move || -> anyhow::Result<()> {
+            loop {
+                thread::sleep(Duration::from_millis(300));
+                let msg = Message::new(
+                    node_id.as_str().to_string(),
+                    node_id.as_str().to_string(),
+                    Body {
+                        id: None,
+                        in_reply_to: None,
+                        payload: Payload::BroadcastUnAcked,
+                    },
+                );
+                tx.send(msg).context("send input")?;
+            }
+        });
         Ok(BroadcastNode {
             id: 1,
             node: init.node_id,
@@ -56,16 +71,10 @@ impl Node<(), Payload> for BroadcastNode {
         &mut self,
         input: Message<Payload>,
         output: &mut std::io::StdoutLock,
-        tx: &std::sync::mpsc::Sender<MessageAckStatus<Payload>>,
     ) -> anyhow::Result<()> {
         let mut reply = input.into_reply(Some(&mut self.id));
         match reply.body.payload {
             Payload::Broadcast { message } => {
-                reply.body.payload = Payload::BroadcastOk {
-                    in_reply_to: reply.body.in_reply_to,
-                };
-                reply.send(output).context("failed to send message")?;
-
                 if !self.messages.contains(&message) {
                     self.messages.push(message);
                     for node in &self.neighbors {
@@ -86,29 +95,24 @@ impl Node<(), Payload> for BroadcastNode {
                             .send(output)
                             .context(format!("failed to send message to node: {node}"))?;
 
-                        // tx.send(MessageAckStatus {
-                        //     status: 0,
-                        //     msg: broad_msg.clone(),
-                        // })
-                        // .context("failed to send")?;
-
+                        // std::mem::swap(&mut broad_msg.src, &mut broad_msg.dst); // into_reply will swap them
                         self.waiting_for_ack
                             .insert(broad_msg.body.id.unwrap(), broad_msg);
                     }
+
+                    reply.body.payload = Payload::BroadcastOk;
+                    reply.send(output).context("failed to send message")?;
                 }
             }
-            Payload::BroadcastOk { in_reply_to } => {
-                // let Some(msg_id) = in_reply_to else {
-                //     return Ok(());
-                // };
-                // if self.waiting_for_ack.contains_key(&msg_id) {
-                //     let msg = self.waiting_for_ack.remove(&msg_id);
-                //     tx.send(MessageAckStatus {
-                //         status: 1,
-                //         msg: msg.unwrap(),
-                //     })
-                //     .context("failed to send")?;
-                // }
+            Payload::BroadcastOk => {
+                let Some(msg_id) = reply.body.in_reply_to else {
+                    return Ok(());
+                };
+                if self.waiting_for_ack.contains_key(&msg_id) {
+                    self.waiting_for_ack
+                        .remove(&msg_id)
+                        .context("removing message from waiting to ack map")?;
+                }
             }
             Payload::Read => {
                 reply.body.payload = Payload::ReadOk {
@@ -123,6 +127,12 @@ impl Node<(), Payload> for BroadcastNode {
                 reply.send(output).context("failed to send message")?;
             }
             Payload::TopologyOk => {}
+            Payload::BroadcastUnAcked => {
+                for m in self.waiting_for_ack.values() {
+                    let msg = m.clone();
+                    msg.send(output).context("failed to send message")?;
+                }
+            }
         }
         Ok(())
     }

@@ -1,4 +1,4 @@
-use std::{collections::HashMap, io::Write};
+use std::{collections::HashMap, io::Write, sync::mpsc::Sender};
 
 use anyhow::{Context, Ok};
 use nazgul::*;
@@ -27,7 +27,7 @@ impl Node<(), Payload> for UniqueIdNode {
         HashMap::new()
     }
 
-    fn from_init(_state: (), init: Init) -> anyhow::Result<Self>
+    fn from_init(_state: (), init: Init, _tx: Sender<Message<Payload>>) -> anyhow::Result<Self>
     where
         Self: Sized,
     {
@@ -41,7 +41,6 @@ impl Node<(), Payload> for UniqueIdNode {
         &mut self,
         input: Message<Payload>,
         output: &mut std::io::StdoutLock,
-        _tx: &std::sync::mpsc::Sender<MessageAckStatus<Payload>>,
     ) -> anyhow::Result<()> {
         let mut reply = input.into_reply(Some(&mut self.id));
         match reply.body.payload {
