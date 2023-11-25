@@ -18,7 +18,7 @@ pub struct Message<Payload> {
 
 impl<Payload> Message<Payload>
 where
-    Payload: Serialize,
+    Payload: Serialize + Debug,
 {
     pub fn new(src: String, dst: String, body: Body<Payload>) -> Self {
         Self { src, dst, body }
@@ -45,6 +45,10 @@ where
         output
             .write_all(b"\n")
             .context("failed to write new line")?;
+        eprintln!(
+            "Sent|> :dest=>{}, :src=>{}, :body=>[:type=>{:?}, :in_reply_to=>{:?}, :msg_id=>{:?}]",
+            self.dst, self.src, self.body.payload, self.body.in_reply_to, self.body.id
+        );
         Ok(())
     }
 

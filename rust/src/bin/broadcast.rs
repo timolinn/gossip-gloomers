@@ -43,19 +43,19 @@ impl Node<(), Payload> for BroadcastNode {
         Self: Sized,
     {
         let node_id = init.node_id.clone();
-        thread::spawn(move || -> anyhow::Result<()> {
-            loop {
-                thread::sleep(Duration::from_millis(300));
-                let msg = Message::new(
-                    node_id.as_str().to_string(),
-                    node_id.as_str().to_string(),
-                    Body {
-                        id: None,
-                        in_reply_to: None,
-                        payload: Payload::BroadcastUnAcked,
-                    },
-                );
-                tx.send(msg).context("send input")?;
+        thread::spawn(move || loop {
+            thread::sleep(Duration::from_millis(1000));
+            let msg = Message::new(
+                node_id.as_str().to_string(),
+                node_id.as_str().to_string(),
+                Body {
+                    id: None,
+                    in_reply_to: None,
+                    payload: Payload::BroadcastUnAcked,
+                },
+            );
+            if tx.send(msg).context("send input").is_err() {
+                break;
             }
         });
         Ok(BroadcastNode {
@@ -72,18 +72,19 @@ impl Node<(), Payload> for BroadcastNode {
         input: Message<Payload>,
         output: &mut std::io::StdoutLock,
     ) -> anyhow::Result<()> {
+        let src = input.src.clone();
         let mut reply = input.into_reply(Some(&mut self.id));
         match reply.body.payload {
             Payload::Broadcast { message } => {
                 if !self.messages.contains(&message) {
                     self.messages.push(message);
-                    for node in &self.neighbors {
-                        if node.as_str() == self.node.as_str() {
+                    for neighbor in &self.neighbors {
+                        if neighbor.as_str() == self.node.as_str() || neighbor.as_str() == src {
                             continue;
                         }
                         let broad_msg = Message {
                             src: self.node.clone(),
-                            dst: node.to_string(),
+                            dst: neighbor.to_string(),
                             body: Body {
                                 id: Some(self.id),
                                 in_reply_to: None,
@@ -93,7 +94,7 @@ impl Node<(), Payload> for BroadcastNode {
                         self.id += 1;
                         broad_msg
                             .send(output)
-                            .context(format!("failed to send message to node: {node}"))?;
+                            .context(format!("failed to send message to node: {neighbor}"))?;
 
                         // std::mem::swap(&mut broad_msg.src, &mut broad_msg.dst); // into_reply will swap them
                         self.waiting_for_ack
@@ -132,7 +133,12 @@ impl Node<(), Payload> for BroadcastNode {
                     let msg = m.clone();
                     msg.send(output).context("failed to send message")?;
                 }
-            }
+            } // _ => {
+              //     // if reply.body.payload == Payload::Init {
+              //     //     return Ok(());
+              //     // }
+              //     eprintln!("not supported: {:?}", reply.body.payload)
+              // }
         }
         Ok(())
     }
