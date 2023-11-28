@@ -1,7 +1,6 @@
 use anyhow::{Context, Ok};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{
-    collections::HashMap,
     fmt::Debug,
     io::{BufRead, StdoutLock, Write},
     sync::mpsc::Sender,
@@ -92,13 +91,6 @@ pub trait Node<S, Payload> {
         Self: Sized;
 
     fn step(&mut self, input: Message<Payload>, output: &mut StdoutLock) -> anyhow::Result<()>;
-
-    fn get_un_acked_msgs(&self) -> HashMap<usize, Message<Payload>>;
-}
-
-pub struct MessageAckStatus<P> {
-    pub status: u8,
-    pub msg: Message<P>,
 }
 
 pub fn main_loop<S, N, P>(init_state: S) -> anyhow::Result<()>

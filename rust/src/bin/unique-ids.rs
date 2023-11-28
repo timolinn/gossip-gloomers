@@ -1,4 +1,4 @@
-use std::{collections::HashMap, io::Write, sync::mpsc::Sender};
+use std::{io::Write, sync::mpsc::Sender};
 
 use anyhow::{Context, Ok};
 use nazgul::*;
@@ -23,10 +23,6 @@ enum Payload {
 }
 
 impl Node<(), Payload> for UniqueIdNode {
-    fn get_un_acked_msgs(&self) -> std::collections::HashMap<usize, Message<Payload>> {
-        HashMap::new()
-    }
-
     fn from_init(_state: (), init: Init, _tx: Sender<Message<Payload>>) -> anyhow::Result<Self>
     where
         Self: Sized,

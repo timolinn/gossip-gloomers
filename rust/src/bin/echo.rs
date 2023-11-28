@@ -3,7 +3,6 @@ use nazgul::*;
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
 use std::{
-    collections::HashMap,
     io::{StdoutLock, Write},
     sync::mpsc::Sender,
 };
@@ -82,10 +81,6 @@ struct EchoNode {
 //     "n20" ["n15" "n21"]},
 // :msg_id 1}
 impl Node<(), Payload> for EchoNode {
-    fn get_un_acked_msgs(&self) -> std::collections::HashMap<usize, Message<Payload>> {
-        HashMap::new()
-    }
-
     fn from_init(_state: (), _init: Init, _tx: Sender<Message<Payload>>) -> anyhow::Result<Self> {
         Ok(EchoNode { id: 1 })
     }

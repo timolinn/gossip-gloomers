@@ -34,10 +34,6 @@ enum Payload {
 }
 
 impl Node<(), Payload> for BroadcastNode {
-    fn get_un_acked_msgs(&self) -> HashMap<usize, Message<Payload>> {
-        self.waiting_for_ack.clone()
-    }
-
     fn from_init(_state: (), init: Init, tx: Sender<Message<Payload>>) -> anyhow::Result<Self>
     where
         Self: Sized,
