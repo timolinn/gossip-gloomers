@@ -48,7 +48,7 @@ impl Node<(), Payload> for GrowOnlyCounter {
         let nid = node.node.clone();
         let nids = node.node_ids.clone();
         thread::spawn(move || loop {
-            thread::sleep(Duration::from_millis(2000));
+            thread::sleep(Duration::from_millis(5000));
             for n in nids.clone() {
                 let msg = Message {
                     src: n,
