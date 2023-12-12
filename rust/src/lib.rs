@@ -44,10 +44,10 @@ where
         output
             .write_all(b"\n")
             .context("failed to write new line")?;
-        eprintln!(
-            "Sent|> :dest=>{}, :src=>{}, :body=>[:type=>{:?}, :in_reply_to=>{:?}, :msg_id=>{:?}]",
-            self.dst, self.src, self.body.payload, self.body.in_reply_to, self.body.id
-        );
+        // eprintln!(
+        //     "Sent|> :dest=>{}, :src=>{}, :body=>[:type=>{:?}, :in_reply_to=>{:?}, :msg_id=>{:?}]",
+        //     self.dst, self.src, self.body.payload, self.body.in_reply_to, self.body.id
+        // );
         Ok(())
     }
 
@@ -95,7 +95,7 @@ pub trait Node<S, Payload> {
 
 pub fn main_loop<S, N, P>(init_state: S) -> anyhow::Result<()>
 where
-    N: Node<S, P> + Clone,
+    N: Node<S, P>,
     P: DeserializeOwned + Serialize + Send + 'static + std::marker::Sync,
 {
     let (tx, rx) = std::sync::mpsc::channel::<Message<P>>();
@@ -133,6 +133,7 @@ where
     let jh = thread::spawn(move || -> anyhow::Result<()> {
         for line in std::io::stdin().lock().lines() {
             let line = line.context("Maelstrom input from STDIN could not be read")?;
+            eprintln!("LINE => {}", line);
             let input: Message<P> = serde_json::from_str(&line)
                 .context("Maelstrom input from STDIN could not deserialised")?;
             tx.send(input).context("send input")?;
@@ -142,7 +143,6 @@ where
     });
 
     for m in rx {
-        // eprintln!("RX {:?}", m.body.id);
         node.step(m, &mut stdout)
             .context("Node step function failed")?;
     }

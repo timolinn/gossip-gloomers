@@ -80,6 +80,14 @@ struct EchoNode {
 //     "n7" ["n12" "n2" "n8" "n6"],
 //     "n20" ["n15" "n21"]},
 // :msg_id 1}
+// {"src":"c1","dest":"n0","body":{"msg_id":3,"in_reply_to":1,"type":"send", "key":"a","msg": 2}}
+// {"src":"c2","dest":"n0","body":{"msg_id":4,"in_reply_to":1,"type":"send", "key":"a","msg": 20}}
+// {"src":"c2","dest":"n0","body":{"msg_id":4,"in_reply_to":1,"type":"send", "key":"a","msg": 200}}
+// {"src":"c1","dest":"n0","body":{"msg_id":3,"in_reply_to":1,"type":"send", "key":"b","msg": 2}}
+// {"src":"c2","dest":"n0","body":{"msg_id":4,"in_reply_to":1,"type":"send", "key":"b","msg": 20}}
+// {"src":"c2","dest":"n0","body":{"msg_id":4,"in_reply_to":1,"type":"poll", "offsets": {"b": 1,"a": 0}}}
+// {"src":"c1","dest":"n0","body":{"msg_id":3,"in_reply_to":1,"type":"commit_offsets", "offsets": {}}}
+
 impl Node<(), Payload> for EchoNode {
     fn from_init(_state: (), _init: Init, _tx: Sender<Message<Payload>>) -> anyhow::Result<Self> {
         Ok(EchoNode { id: 1 })
