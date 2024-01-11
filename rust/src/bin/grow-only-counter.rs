@@ -1,16 +1,16 @@
-use std::{collections::HashMap, thread, time::Duration};
+use std::{collections::HashMap, sync::Mutex, thread, time::Duration};
 
 use anyhow::Context;
 use nazgul::{main_loop, Body, Message, Node};
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone)]
 struct GrowOnlyCounter {
     id: usize,
     node: String,
     count: usize,
     node_ids: Vec<String>,
     node_values: HashMap<String, usize>,
+    output: Mutex<std::io::Stdout>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -44,6 +44,7 @@ impl Node<(), Payload> for GrowOnlyCounter {
                 .filter(|x| *x != init.node_id)
                 .collect(),
             node_values: HashMap::new(),
+            output: Mutex::new(std::io::stdout()),
         };
         let nid = node.node.clone();
         let nids = node.node_ids.clone();
@@ -67,17 +68,13 @@ impl Node<(), Payload> for GrowOnlyCounter {
         Ok(node)
     }
 
-    fn step(
-        &mut self,
-        input: nazgul::Message<Payload>,
-        output: &mut std::io::StdoutLock,
-    ) -> anyhow::Result<()> {
+    fn step(&mut self, input: nazgul::Message<Payload>) -> anyhow::Result<()> {
         let mut reply = input.into_reply(Some(&mut self.id));
         match reply.body.payload {
             Payload::Add { delta } => {
                 self.count += delta;
                 reply.body.payload = Payload::AddOk;
-                reply.send(output).context("sending AddOk")?;
+                reply.send(&self.output).context("sending AddOk")?;
             }
             Payload::Read => {
                 let mut count = self.count;
@@ -85,7 +82,7 @@ impl Node<(), Payload> for GrowOnlyCounter {
                     count += nv;
                 }
                 reply.body.payload = Payload::ReadOk { value: count };
-                reply.send(output).context("sending ReadOk")?;
+                reply.send(&self.output).context("sending ReadOk")?;
             }
             Payload::ServerRead => {
                 eprintln!(
@@ -93,7 +90,7 @@ impl Node<(), Payload> for GrowOnlyCounter {
                     reply.src, reply.dst, self.count
                 );
                 reply.body.payload = Payload::ServerReadOk { value: self.count };
-                reply.send(output).context("sending ServerReadOk")?;
+                reply.send(&self.output).context("sending ServerReadOk")?;
             }
             Payload::ServerReadOk { value } => {
                 eprintln!(

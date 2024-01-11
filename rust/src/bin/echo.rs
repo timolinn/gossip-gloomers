@@ -4,7 +4,7 @@ use anyhow::Context;
 use serde::{Deserialize, Serialize};
 use std::{
     io::{StdoutLock, Write},
-    sync::mpsc::Sender,
+    sync::{mpsc::Sender, Mutex},
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -15,9 +15,9 @@ enum Payload {
     EchoOk { echo: String },
 }
 
-#[derive(Clone)]
 struct EchoNode {
     id: usize,
+    output: Mutex<std::io::Stdout>,
 }
 // { "src": "c1", "dest": "n3", "body": { "type": "init", "msg_id": 1, "node_id": "n3", "node_ids": ["n1", "n2", "n3"] } }
 // {"src":"n3","dest":"n2","body":{"msg_id":1000,"type":"topology","topology":{"n1": ["n3"],"n2": ["n1"],"n3": ["n1","n2"]}}}
@@ -90,17 +90,20 @@ struct EchoNode {
 
 impl Node<(), Payload> for EchoNode {
     fn from_init(_state: (), _init: Init, _tx: Sender<Message<Payload>>) -> anyhow::Result<Self> {
-        Ok(EchoNode { id: 1 })
+        Ok(EchoNode {
+            id: 1,
+            output: Mutex::new(std::io::stdout()),
+        })
     }
 
-    fn step(&mut self, input: Message<Payload>, output: &mut StdoutLock) -> anyhow::Result<()> {
+    fn step(&mut self, input: Message<Payload>) -> anyhow::Result<()> {
         let mut reply = input.into_reply(Some(&mut self.id));
         match reply.body.payload {
             Payload::Echo { echo } => {
                 reply.body.payload = Payload::EchoOk { echo };
-                serde_json::to_writer(&mut *output, &reply)
+                reply
+                    .send(&self.output)
                     .context("failed to serialize response")?;
-                output.write_all(b"\n").context("writing new line")?;
             }
             Payload::EchoOk { .. } => {}
         }

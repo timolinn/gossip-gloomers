@@ -1,13 +1,16 @@
-use std::{io::Write, sync::mpsc::Sender};
+use std::{
+    io::Write,
+    sync::{mpsc::Sender, Mutex},
+};
 
 use anyhow::{Context, Ok};
 use nazgul::*;
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone)]
 struct UniqueIdNode {
     id: usize,
+    output: Mutex<std::io::Stdout>,
     node: String,
 }
 
@@ -29,24 +32,21 @@ impl Node<(), Payload> for UniqueIdNode {
     {
         Ok(UniqueIdNode {
             id: 1,
+            output: Mutex::new(std::io::stdout()),
             node: init.node_id,
         })
     }
 
-    fn step(
-        &mut self,
-        input: Message<Payload>,
-        output: &mut std::io::StdoutLock,
-    ) -> anyhow::Result<()> {
+    fn step(&mut self, input: Message<Payload>) -> anyhow::Result<()> {
         let mut reply = input.into_reply(Some(&mut self.id));
         match reply.body.payload {
             Payload::Generate => {
                 reply.body.payload = Payload::GenerateOk {
                     guid: format!("{}-{}", self.node, self.id),
                 };
-                serde_json::to_writer(&mut *output, &reply)
+                reply
+                    .send(&self.output)
                     .context("failed to serialize response")?;
-                output.write_all(b"\n").context("failed to write newline")?;
             }
             Payload::GenerateOk { .. } => {}
         }

@@ -1,9 +1,9 @@
 use anyhow::{Context, Ok};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{
-    fmt::Debug,
+    fmt::{Debug, Display},
     io::{BufRead, StdoutLock, Write},
-    sync::mpsc::Sender,
+    sync::{mpsc::Sender, Mutex},
     thread,
 };
 
@@ -38,10 +38,13 @@ where
         }
     }
 
-    pub fn send(&self, output: &mut std::io::StdoutLock) -> anyhow::Result<()> {
-        serde_json::to_writer(&mut *output, self)
-            .context("failed to serialize broadcast  reply")?;
-        output
+    pub fn send(&self, output: &Mutex<std::io::Stdout>) -> anyhow::Result<()> {
+        let out = output.lock().unwrap();
+        let data = serde_json::to_string(self).context("failed to serialize broadcast reply")?;
+        out.lock()
+            .write_all(data.as_bytes())
+            .context("failed to write new line")?;
+        out.lock()
             .write_all(b"\n")
             .context("failed to write new line")?;
         // eprintln!(
@@ -90,7 +93,29 @@ pub trait Node<S, Payload> {
     where
         Self: Sized;
 
-    fn step(&mut self, input: Message<Payload>, output: &mut StdoutLock) -> anyhow::Result<()>;
+    fn step(&mut self, input: Message<Payload>) -> anyhow::Result<()>;
+}
+
+pub trait KV: Send + Sync {
+    /// Read returns the value for a given key in the key/value store.
+    /// Returns an RPCError error with a KeyDoesNotExist code if the key does not exist.
+    fn read<T>(&mut self, key: impl Into<String>) -> anyhow::Result<T>
+    where
+        T: Deserialize<'static> + Send;
+
+    /// Write overwrites the value for a given key in the key/value store.
+    fn write<T>(&self, key: impl Into<String>, val: T) -> anyhow::Result<()>
+    where
+        T: Serialize + Send;
+
+    /// compare and set (CAS) updates the value for a key if its current value matches the
+    /// previous value. Creates the key if it is not exist is requested.
+    ///
+    /// Returns an RPCError with a code of PreconditionFailed if the previous value
+    /// does not match. Return a code of KeyDoesNotExist if the key did not exist.
+    fn cas<T>(&self, key: impl Into<String>, from: T, to: T, put: bool) -> anyhow::Result<()>
+    where
+        T: Serialize + Deserialize<'static> + Send;
 }
 
 pub fn main_loop<S, N, P>(init_state: S) -> anyhow::Result<()>
@@ -101,7 +126,7 @@ where
     let (tx, rx) = std::sync::mpsc::channel::<Message<P>>();
     let stdin = std::io::stdin().lock();
     let mut stdin = stdin.lines();
-    let mut stdout = std::io::stdout().lock();
+    let stdout = Mutex::new(std::io::stdout());
 
     let init_msg: Message<InitPayload> = serde_json::from_str(
         &stdin
@@ -127,7 +152,7 @@ where
         },
     };
 
-    reply.send(&mut stdout).context("failed to send message")?;
+    reply.send(&stdout).context("failed to send message")?;
 
     drop(stdin);
     let jh = thread::spawn(move || -> anyhow::Result<()> {
@@ -143,8 +168,7 @@ where
     });
 
     for m in rx {
-        node.step(m, &mut stdout)
-            .context("Node step function failed")?;
+        node.step(m).context("Node step function failed")?;
     }
 
     jh.join()

@@ -1,17 +1,22 @@
 use anyhow::{Context, Ok};
 use nazgul::*;
 
-use std::{collections::HashMap, sync::mpsc::Sender, thread, time::Duration};
+use std::{
+    collections::HashMap,
+    sync::{mpsc::Sender, Mutex},
+    thread,
+    time::Duration,
+};
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone)]
 struct BroadcastNode {
     id: usize,
     node: String,
     messages: Vec<usize>,
     neighbors: Vec<String>,
     waiting_for_ack: HashMap<usize, Message<Payload>>,
+    output: Mutex<std::io::Stdout>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -60,20 +65,17 @@ impl Node<(), Payload> for BroadcastNode {
             messages: Vec::new(),
             neighbors: Vec::new(),
             waiting_for_ack: HashMap::new(),
+            output: Mutex::new(std::io::stdout()),
         })
     }
 
-    fn step(
-        &mut self,
-        input: Message<Payload>,
-        output: &mut std::io::StdoutLock,
-    ) -> anyhow::Result<()> {
+    fn step(&mut self, input: Message<Payload>) -> anyhow::Result<()> {
         let src = input.src.clone();
         let mut reply = input.into_reply(Some(&mut self.id));
         match reply.body.payload {
             Payload::Broadcast { message } => {
                 reply.body.payload = Payload::BroadcastOk;
-                reply.send(output).context("failed to send message")?;
+                reply.send(&self.output).context("failed to send message")?;
 
                 if !self.messages.contains(&message) {
                     self.messages.push(message);
@@ -92,7 +94,7 @@ impl Node<(), Payload> for BroadcastNode {
                         };
                         self.id += 1;
                         broad_msg
-                            .send(output)
+                            .send(&self.output)
                             .context(format!("failed to send message to node: {neighbor}"))?;
 
                         // std::mem::swap(&mut broad_msg.src, &mut broad_msg.dst); // into_reply will swap them
@@ -115,14 +117,14 @@ impl Node<(), Payload> for BroadcastNode {
                 reply.body.payload = Payload::ReadOk {
                     messages: self.messages.clone(),
                 };
-                reply.send(output).context("failed to send message")?;
+                reply.send(&self.output).context("failed to send message")?;
             }
             Payload::Topology { mut topology } => {
                 self.neighbors = topology.remove(&self.node).unwrap_or_else(|| {
                     panic!("could not retrieve topology for node: {}", &self.node)
                 });
                 reply.body.payload = Payload::TopologyOk;
-                reply.send(output).context("failed to send message")?;
+                reply.send(&self.output).context("failed to send message")?;
             }
             Payload::BroadcastUnAcked => {
                 // let l = self
@@ -131,7 +133,7 @@ impl Node<(), Payload> for BroadcastNode {
                 //     .map(|x| x.1)
                 //     .collect::<Vec<&Message<Payload>>>();
                 for m in self.waiting_for_ack.values() {
-                    m.send(output).context("failed to send message")?;
+                    m.send(&self.output).context("failed to send message")?;
                 }
             }
             Payload::TopologyOk | Payload::ReadOk { .. } => {}
