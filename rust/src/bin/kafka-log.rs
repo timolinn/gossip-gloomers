@@ -1,56 +1,93 @@
 use std::{
     collections::{HashMap, LinkedList},
-    sync::Mutex,
+    sync::{
+        atomic::{AtomicUsize, Ordering},
+        Mutex,
+    },
 };
 
-use anyhow::Context;
+use anyhow::{bail, Context};
 use nazgul::{main_loop, Body, Message, Node, KV};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug)]
 struct KafkaLog {
-    id: usize,
+    id: AtomicUsize,
     logs: HashMap<String, LinkedList<Log>>,
     commit_offsets: HashMap<String, usize>,
     node: String,
     lin_store: String,
     seq_store: String,
-    rpc: Mutex<HashMap<usize, oneshot::Receiver<Message<Payload>>>>,
+    rpc: Mutex<HashMap<usize, oneshot::Sender<Message<Payload>>>>,
     output: Mutex<std::io::Stdout>,
 }
 
-impl nazgul::KV for KafkaLog {
-    fn cas<T>(&self, key: impl Into<String>, from: T, to: T, put: bool) -> anyhow::Result<()>
-    where
-        T: serde::Serialize + serde::Deserialize<'static> + Send,
-    {
-        Ok(())
-    }
-
-    fn read<T>(&mut self, key: impl Into<String>) -> anyhow::Result<T> {
-        let id = Some(&mut self.id);
+impl nazgul::KV<usize> for KafkaLog {
+    fn sync_cas(
+        &self,
+        key: impl Into<String>,
+        store: &String,
+        from: usize,
+        to: usize,
+        _put: bool,
+    ) -> anyhow::Result<()> {
         let msg = Message::new(
             self.node.clone(),
-            store,
+            store.to_string(),
             Body {
-                // id: self.id.fetch_add(1, Ordering::SeqCst).into(),
-                id: id.map(|id| {
-                    let mid = *id; // mut lets us deref
-                    *id += 1;
-                    mid
-                }),
+                id: self.id.fetch_add(1, Ordering::SeqCst).into(),
+                in_reply_to: None,
+                payload: Payload::Cas {
+                    key: key.into(),
+                    from,
+                    to,
+                },
+            },
+        );
+
+        let res = self.sync_rpc(msg).context("sending rpc for cas")?;
+        match res.body.payload {
+            Payload::CasOk {} => Ok(()),
+            _ => anyhow::bail!("unexpected payload for CAS"),
+        }
+    }
+
+    fn sync_read(&self, key: impl Into<String>, store: &String) -> anyhow::Result<usize> {
+        let msg = Message::new(
+            self.node.clone(),
+            store.to_string(),
+            Body {
+                id: self.id.fetch_add(1, Ordering::SeqCst).into(),
                 in_reply_to: None,
                 payload: Payload::Read { key: key.into() },
             },
         );
-        Ok(())
+        let res = self.sync_rpc(msg).context("sending rpc")?;
+        match res.body.payload {
+            Payload::ReadOk { value } => Ok(value),
+            _ => bail!("unexpected return type"),
+        }
     }
 
-    fn write<T>(&self, key: impl Into<String>, val: T) -> anyhow::Result<()>
-    where
-        T: serde::Serialize + Send,
-    {
-        Ok(())
+    fn sync_write(&self, key: impl Into<String>, store: &String, val: usize) -> anyhow::Result<()> {
+        let msg = Message::new(
+            self.node.clone(),
+            store.to_string(),
+            Body {
+                id: self.id.fetch_add(1, Ordering::SeqCst).into(),
+                in_reply_to: None,
+                payload: Payload::Write {
+                    key: key.into(),
+                    value: val,
+                },
+            },
+        );
+
+        let res = self.sync_rpc(msg).context("sending rpc for write")?;
+        match res.body.payload {
+            Payload::WriteOk {} => Ok(()),
+            _ => bail!("unexpected payload for write RPC"),
+        }
     }
 }
 
@@ -66,16 +103,14 @@ impl Log {
 }
 
 impl KafkaLog {
-    fn sync_rpc(
-        &self,
-        msg: Message<Payload>,
-        output: &mut std::io::StdoutLock,
-    ) -> anyhow::Result<Message<Payload>> {
+    fn sync_rpc(&self, msg: Message<Payload>) -> anyhow::Result<Message<Payload>> {
         let (tx, rx) = oneshot::channel::<Message<Payload>>();
-        self.rpc.lock().unwrap().insert(msg.body.id.unwrap(), rx);
-        msg.send(&self.output).context("sending rpc");
-        let res = rx.recv().unwrap();
-        Ok(res)
+
+        // register transmitter
+        self.rpc.lock().unwrap().insert(msg.body.id.unwrap(), tx);
+        msg.send(&self.output).context("sending rpc")?;
+
+        Ok(rx.recv()?)
     }
 }
 
@@ -121,8 +156,8 @@ enum Payload {
     WriteOk,
     Cas {
         key: String,
-        from: String,
-        to: String,
+        from: usize,
+        to: usize,
     },
     CasOk,
 }
@@ -137,7 +172,7 @@ impl Node<(), Payload> for KafkaLog {
         Self: Sized,
     {
         Ok(Self {
-            id: 1,
+            id: AtomicUsize::new(1),
             logs: HashMap::new(),
             commit_offsets: HashMap::new(),
             node: init.node_id,
@@ -149,20 +184,39 @@ impl Node<(), Payload> for KafkaLog {
     }
 
     fn step(&mut self, input: nazgul::Message<Payload>) -> anyhow::Result<()> {
-        let mut reply = input.into_reply(Some(&mut self.id));
+        let mut rpc = self.rpc.lock().unwrap();
+        if rpc.contains_key(&input.body.id.unwrap()) {
+            let tx = rpc.remove(&input.body.id.unwrap()).unwrap();
+            if let Err(e) = tx.send(input).context("sending rpc") {
+                bail!("channel closed: {}", e.to_string());
+            }
+            return Ok(());
+        }
+
+        let mut reply = input.into_reply(Some(self.id.get_mut()));
         match reply.body.payload {
             Payload::Send { key, msg } => {
-                let res = self.logs.entry(key).or_default();
-                res.push_back(Log::from(msg));
+                // let res = self.logs.entry(key.clone()).or_default();
+                // res.push_back(Log::from(msg));
 
-                reply.body.payload = Payload::SendOk {
-                    offset: res.len() - 1,
+                let offset = self
+                    .sync_read(key.clone(), &self.lin_store)
+                    .context("Read Offset");
+                let offset = match offset {
+                    Ok(o) => o,
+                    Err(_) => 0,
                 };
+
+                self.sync_write(key, &self.lin_store, msg)
+                    .context("Write Offset")?;
+
+                reply.body.payload = Payload::SendOk { offset };
                 reply.send(&self.output).context("reply Send")?;
             }
             Payload::Poll { offsets } => {
                 let o = offsets.clone();
                 let mut resp = HashMap::new();
+
                 for (k, v) in offsets {
                     let kl = self.logs.entry(k.clone()).or_default();
                     let res = kl
@@ -174,6 +228,7 @@ impl Node<(), Payload> for KafkaLog {
                         .collect();
                     resp.insert(k, res);
                 }
+
                 eprintln!("Poll|> {:?}, RESP|>{:?}", o, resp);
                 reply.body.payload = Payload::PollOk { msgs: resp };
                 reply.send(&self.output).context("reply Poll")?;

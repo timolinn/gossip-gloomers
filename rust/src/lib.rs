@@ -96,15 +96,15 @@ pub trait Node<S, Payload> {
     fn step(&mut self, input: Message<Payload>) -> anyhow::Result<()>;
 }
 
-pub trait KV: Send + Sync {
+pub trait KV<T>: Send + Sync {
     /// Read returns the value for a given key in the key/value store.
     /// Returns an RPCError error with a KeyDoesNotExist code if the key does not exist.
-    fn read<T>(&mut self, key: impl Into<String>) -> anyhow::Result<T>
+    fn sync_read(&self, key: impl Into<String>, store: &String) -> anyhow::Result<T>
     where
         T: Deserialize<'static> + Send;
 
     /// Write overwrites the value for a given key in the key/value store.
-    fn write<T>(&self, key: impl Into<String>, val: T) -> anyhow::Result<()>
+    fn sync_write(&self, key: impl Into<String>, store: &String, val: T) -> anyhow::Result<()>
     where
         T: Serialize + Send;
 
@@ -113,7 +113,14 @@ pub trait KV: Send + Sync {
     ///
     /// Returns an RPCError with a code of PreconditionFailed if the previous value
     /// does not match. Return a code of KeyDoesNotExist if the key did not exist.
-    fn cas<T>(&self, key: impl Into<String>, from: T, to: T, put: bool) -> anyhow::Result<()>
+    fn sync_cas(
+        &self,
+        key: impl Into<String>,
+        store: &String,
+        from: T,
+        to: T,
+        put: bool,
+    ) -> anyhow::Result<()>
     where
         T: Serialize + Deserialize<'static> + Send;
 }
@@ -158,9 +165,9 @@ where
     let jh = thread::spawn(move || -> anyhow::Result<()> {
         for line in std::io::stdin().lock().lines() {
             let line = line.context("Maelstrom input from STDIN could not be read")?;
-            eprintln!("LINE => {}", line);
             let input: Message<P> = serde_json::from_str(&line)
                 .context("Maelstrom input from STDIN could not deserialised")?;
+
             tx.send(input).context("send input")?;
         }
 
