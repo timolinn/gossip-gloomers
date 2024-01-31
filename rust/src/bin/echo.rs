@@ -14,6 +14,7 @@ enum Payload {
     Echo { echo: String },
     EchoOk { echo: String },
 }
+use async_trait::async_trait;
 
 struct EchoNode {
     id: usize,
@@ -88,15 +89,20 @@ struct EchoNode {
 // {"src":"c2","dest":"n0","body":{"msg_id":4,"in_reply_to":1,"type":"poll", "offsets": {"b": 1,"a": 0}}}
 // {"src":"c1","dest":"n0","body":{"msg_id":3,"in_reply_to":1,"type":"commit_offsets", "offsets": {}}}
 
+#[async_trait]
 impl Node<(), Payload> for EchoNode {
-    fn from_init(_state: (), _init: Init, _tx: Sender<Message<Payload>>) -> anyhow::Result<Self> {
+    async fn from_init(
+        _state: (),
+        _init: Init,
+        _tx: Sender<Message<Payload>>,
+    ) -> anyhow::Result<Self> {
         Ok(EchoNode {
             id: 1,
             output: Mutex::new(std::io::stdout()),
         })
     }
 
-    fn step(&mut self, input: Message<Payload>) -> anyhow::Result<()> {
+    async fn step(&mut self, input: Message<Payload>) -> anyhow::Result<()> {
         let mut reply = input.into_reply(Some(&mut self.id));
         match reply.body.payload {
             Payload::Echo { echo } => {

@@ -7,6 +7,7 @@ use std::{
 };
 
 use anyhow::{bail, Context};
+use async_trait::async_trait;
 use nazgul::{main_loop, Body, Message, Node, KV};
 use serde::{Deserialize, Serialize};
 
@@ -22,14 +23,15 @@ struct KafkaLog {
     output: Mutex<std::io::Stdout>,
 }
 
+#[async_trait]
 impl nazgul::KV<usize> for KafkaLog {
-    fn sync_cas(
+    async fn sync_cas(
         &self,
-        key: impl Into<String>,
+        key: String,
         store: &String,
         from: usize,
         to: usize,
-        _put: bool,
+        put: bool,
     ) -> anyhow::Result<()> {
         let msg = Message::new(
             self.node.clone(),
@@ -41,18 +43,20 @@ impl nazgul::KV<usize> for KafkaLog {
                     key: key.into(),
                     from,
                     to,
+                    put,
                 },
             },
         );
 
-        let res = self.sync_rpc(msg).context("sending rpc for cas")?;
+        let res = self.sync_rpc(msg).await.context("sending rpc for cas")?;
         match res.body.payload {
             Payload::CasOk {} => Ok(()),
             _ => anyhow::bail!("unexpected payload for CAS"),
         }
     }
 
-    fn sync_read(&self, key: impl Into<String>, store: &String) -> anyhow::Result<usize> {
+    async fn sync_read(&self, key: String, store: &String) -> anyhow::Result<usize> {
+        eprintln!("sync_read|> key");
         let msg = Message::new(
             self.node.clone(),
             store.to_string(),
@@ -62,14 +66,15 @@ impl nazgul::KV<usize> for KafkaLog {
                 payload: Payload::Read { key: key.into() },
             },
         );
-        let res = self.sync_rpc(msg).context("sending rpc")?;
+        let res = self.sync_rpc(msg).await.context("sending rpc")?;
+        eprintln!("sync_read|> done");
         match res.body.payload {
             Payload::ReadOk { value } => Ok(value),
             _ => bail!("unexpected return type"),
         }
     }
 
-    fn sync_write(&self, key: impl Into<String>, store: &String, val: usize) -> anyhow::Result<()> {
+    async fn sync_write(&self, key: String, store: &String, val: usize) -> anyhow::Result<()> {
         let msg = Message::new(
             self.node.clone(),
             store.to_string(),
@@ -83,7 +88,7 @@ impl nazgul::KV<usize> for KafkaLog {
             },
         );
 
-        let res = self.sync_rpc(msg).context("sending rpc for write")?;
+        let res = self.sync_rpc(msg).await.context("sending rpc for write")?;
         match res.body.payload {
             Payload::WriteOk {} => Ok(()),
             _ => bail!("unexpected payload for write RPC"),
@@ -103,13 +108,13 @@ impl Log {
 }
 
 impl KafkaLog {
-    fn sync_rpc(&self, msg: Message<Payload>) -> anyhow::Result<Message<Payload>> {
+    async fn sync_rpc(&self, msg: Message<Payload>) -> anyhow::Result<Message<Payload>> {
         let (tx, rx) = oneshot::channel::<Message<Payload>>();
 
         // register transmitter
         self.rpc.lock().unwrap().insert(msg.body.id.unwrap(), tx);
         msg.send(&self.output).context("sending rpc")?;
-
+        eprintln!("sync_rpc|> msg sent");
         Ok(rx.recv()?)
     }
 }
@@ -158,12 +163,14 @@ enum Payload {
         key: String,
         from: usize,
         to: usize,
+        put: bool,
     },
     CasOk,
 }
 
+#[async_trait]
 impl Node<(), Payload> for KafkaLog {
-    fn from_init(
+    async fn from_init(
         _state: (),
         init: nazgul::Init,
         _tx: std::sync::mpsc::Sender<nazgul::Message<Payload>>,
@@ -183,50 +190,88 @@ impl Node<(), Payload> for KafkaLog {
         })
     }
 
-    fn step(&mut self, input: nazgul::Message<Payload>) -> anyhow::Result<()> {
-        let mut rpc = self.rpc.lock().unwrap();
-        if rpc.contains_key(&input.body.id.unwrap()) {
-            let tx = rpc.remove(&input.body.id.unwrap()).unwrap();
+    async fn step(&mut self, input: nazgul::Message<Payload>) -> anyhow::Result<()> {
+        eprintln!("KafkaLog|> {:?}", input);
+        if self
+            .rpc
+            .lock()
+            .unwrap()
+            .contains_key(&input.body.id.unwrap())
+        {
+            let tx = self
+                .rpc
+                .lock()
+                .unwrap()
+                .remove(&input.body.id.unwrap())
+                .unwrap();
             if let Err(e) = tx.send(input).context("sending rpc") {
                 bail!("channel closed: {}", e.to_string());
             }
             return Ok(());
         }
 
+        eprintln!("KafkaLog2|> {:?}", input);
+        let i = input.clone();
         let mut reply = input.into_reply(Some(self.id.get_mut()));
         match reply.body.payload {
             Payload::Send { key, msg } => {
                 // let res = self.logs.entry(key.clone()).or_default();
                 // res.push_back(Log::from(msg));
 
+                let latest_key = format!("{}:latest", key);
                 let offset = self
-                    .sync_read(key.clone(), &self.lin_store)
-                    .context("Read Offset");
-                let offset = match offset {
+                    .sync_read(latest_key.clone(), &self.lin_store)
+                    .await
+                    .context("read offset");
+                let mut offset = match offset {
                     Ok(o) => o,
                     Err(_) => 0,
                 };
+                eprintln!("KafkaLog3|> {:?}", i);
+                loop {
+                    let curr = offset;
+                    let (prev, now) = (curr - 1, curr);
+                    let res = self
+                        .sync_cas(latest_key.clone(), &self.lin_store, prev, now, true)
+                        .await
+                        .context("cas offset");
 
-                self.sync_write(key, &self.lin_store, msg)
-                    .context("Write Offset")?;
+                    match res {
+                        Ok(_) => break,
+                        Err(_) => offset += 1,
+                    };
+                }
+                eprintln!("KafkaLog4|> {:?}", i);
+                let msg_key = format!("{}:{}", key, msg);
+
+                self.sync_write(msg_key, &self.seq_store, msg)
+                    .await
+                    .context("write msg_key offset")?;
+
+                self.sync_write(latest_key, &self.seq_store, msg)
+                    .await
+                    .context("write latest key with offset")?;
 
                 reply.body.payload = Payload::SendOk { offset };
                 reply.send(&self.output).context("reply Send")?;
             }
             Payload::Poll { offsets } => {
                 let o = offsets.clone();
-                let mut resp = HashMap::new();
+                let mut resp: HashMap<String, Vec<[usize; 2]>> = HashMap::new();
 
                 for (k, v) in offsets {
-                    let kl = self.logs.entry(k.clone()).or_default();
-                    let res = kl
-                        .iter()
-                        .skip(v)
-                        .take(3)
-                        .enumerate()
-                        .map(|l| [v + l.0, l.1.value])
-                        .collect();
-                    resp.insert(k, res);
+                    for i in v..v + 3 {
+                        let val = self
+                            .sync_read(format!("{}:{}", k, i), &self.seq_store)
+                            .await
+                            .context("read msg_key offset");
+                        let val = match val {
+                            Ok(o) => o,
+                            Err(_) => continue,
+                        };
+                        let l = resp.entry(k.clone()).or_default();
+                        l.push([i, val]);
+                    }
                 }
 
                 eprintln!("Poll|> {:?}, RESP|>{:?}", o, resp);
@@ -234,23 +279,28 @@ impl Node<(), Payload> for KafkaLog {
                 reply.send(&self.output).context("reply Poll")?;
             }
             Payload::CommitOffsets { offsets } => {
-                offsets.into_iter().for_each(|(key, offset)| {
-                    self.commit_offsets
-                        .entry(key.clone())
-                        .and_modify(|o| *o = offset)
-                        .or_insert(offset);
-                });
+                for (k, v) in offsets {
+                    self.sync_write(format!("commit:{}", k), &self.seq_store, v)
+                        .await
+                        .context("write offset")?;
+                }
 
                 reply.body.payload = Payload::CommitOffsetsOk;
                 reply.send(&self.output).context("reply CommitOffsets")?;
             }
             Payload::ListCommittedOffsets { keys } => {
                 let mut resp = HashMap::new();
-                keys.into_iter().for_each(|key| {
-                    if let Some(offset) = self.commit_offsets.get(&key) {
-                        resp.insert(key, *offset);
-                    }
-                });
+                for k in keys {
+                    let val = self
+                        .sync_read(format!("commit:{}", k), &self.seq_store)
+                        .await
+                        .context("read msg_key offset");
+                    let val = match val {
+                        Ok(o) => o,
+                        Err(_) => continue,
+                    };
+                    resp.insert(k, val);
+                }
                 reply.body.payload = Payload::ListCommittedOffsetsOk { offsets: resp };
                 reply
                     .send(&self.output)
@@ -260,11 +310,16 @@ impl Node<(), Payload> for KafkaLog {
             | Payload::SendOk { .. }
             | Payload::CommitOffsetsOk
             | Payload::ListCommittedOffsetsOk { .. } => {}
-            Payload::Read { key } => todo!(),
-            Payload::ReadOk { value } => todo!(),
-            Payload::Write { key, value } => todo!(),
+            Payload::Read { key: _ } => todo!(),
+            Payload::ReadOk { value: _ } => todo!(),
+            Payload::Write { key: _, value: _ } => todo!(),
             Payload::WriteOk => todo!(),
-            Payload::Cas { key, from, to } => todo!(),
+            Payload::Cas {
+                key: _,
+                from: _,
+                to: _,
+                put: _,
+            } => todo!(),
             Payload::CasOk => todo!(),
         }
         Ok(())

@@ -4,8 +4,8 @@ use std::{
 };
 
 use anyhow::{Context, Ok};
+use async_trait::async_trait;
 use nazgul::*;
-
 use serde::{Deserialize, Serialize};
 
 struct UniqueIdNode {
@@ -25,8 +25,13 @@ enum Payload {
     },
 }
 
+#[async_trait]
 impl Node<(), Payload> for UniqueIdNode {
-    fn from_init(_state: (), init: Init, _tx: Sender<Message<Payload>>) -> anyhow::Result<Self>
+    async fn from_init(
+        _state: (),
+        init: Init,
+        _tx: Sender<Message<Payload>>,
+    ) -> anyhow::Result<Self>
     where
         Self: Sized,
     {
@@ -37,7 +42,7 @@ impl Node<(), Payload> for UniqueIdNode {
         })
     }
 
-    fn step(&mut self, input: Message<Payload>) -> anyhow::Result<()> {
+    async fn step(&mut self, input: Message<Payload>) -> anyhow::Result<()> {
         let mut reply = input.into_reply(Some(&mut self.id));
         match reply.body.payload {
             Payload::Generate => {

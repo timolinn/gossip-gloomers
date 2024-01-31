@@ -8,6 +8,7 @@ use std::{
     time::Duration,
 };
 
+use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 
 struct BroadcastNode {
@@ -38,8 +39,9 @@ enum Payload {
     TopologyOk,
 }
 
+#[async_trait]
 impl Node<(), Payload> for BroadcastNode {
-    fn from_init(_state: (), init: Init, tx: Sender<Message<Payload>>) -> anyhow::Result<Self>
+    async fn from_init(_state: (), init: Init, tx: Sender<Message<Payload>>) -> anyhow::Result<Self>
     where
         Self: Sized,
     {
@@ -69,7 +71,7 @@ impl Node<(), Payload> for BroadcastNode {
         })
     }
 
-    fn step(&mut self, input: Message<Payload>) -> anyhow::Result<()> {
+    async fn step(&mut self, input: Message<Payload>) -> anyhow::Result<()> {
         let src = input.src.clone();
         let mut reply = input.into_reply(Some(&mut self.id));
         match reply.body.payload {

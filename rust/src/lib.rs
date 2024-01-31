@@ -1,4 +1,5 @@
 use anyhow::{Context, Ok};
+use async_trait::async_trait;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{
     fmt::{Debug, Display},
@@ -88,23 +89,25 @@ enum InitPayload {
     InitOk,
 }
 
+#[async_trait]
 pub trait Node<S, Payload> {
-    fn from_init(state: S, init: Init, tx: Sender<Message<Payload>>) -> anyhow::Result<Self>
+    async fn from_init(state: S, init: Init, tx: Sender<Message<Payload>>) -> anyhow::Result<Self>
     where
         Self: Sized;
 
-    fn step(&mut self, input: Message<Payload>) -> anyhow::Result<()>;
+    async fn step(&mut self, input: Message<Payload>) -> anyhow::Result<()>;
 }
 
+#[async_trait]
 pub trait KV<T>: Send + Sync {
     /// Read returns the value for a given key in the key/value store.
     /// Returns an RPCError error with a KeyDoesNotExist code if the key does not exist.
-    fn sync_read(&self, key: impl Into<String>, store: &String) -> anyhow::Result<T>
+    async fn sync_read(&self, key: String, store: &String) -> anyhow::Result<T>
     where
         T: Deserialize<'static> + Send;
 
     /// Write overwrites the value for a given key in the key/value store.
-    fn sync_write(&self, key: impl Into<String>, store: &String, val: T) -> anyhow::Result<()>
+    async fn sync_write(&self, key: String, store: &String, val: T) -> anyhow::Result<()>
     where
         T: Serialize + Send;
 
@@ -113,9 +116,9 @@ pub trait KV<T>: Send + Sync {
     ///
     /// Returns an RPCError with a code of PreconditionFailed if the previous value
     /// does not match. Return a code of KeyDoesNotExist if the key did not exist.
-    fn sync_cas(
+    async fn sync_cas(
         &self,
-        key: impl Into<String>,
+        key: String,
         store: &String,
         from: T,
         to: T,
@@ -125,7 +128,8 @@ pub trait KV<T>: Send + Sync {
         T: Serialize + Deserialize<'static> + Send;
 }
 
-pub fn main_loop<S, N, P>(init_state: S) -> anyhow::Result<()>
+#[tokio::main]
+pub async fn main_loop<S, N, P>(init_state: S) -> anyhow::Result<()>
 where
     N: Node<S, P>,
     P: DeserializeOwned + Serialize + Send + 'static + std::marker::Sync,
@@ -147,8 +151,9 @@ where
         panic!("first message should be init");
     };
 
-    let mut node: N =
-        Node::from_init(init_state, init, tx.clone()).context("node initialization failed")?;
+    let mut node: N = Node::from_init(init_state, init, tx.clone())
+        .await
+        .context("node initialization failed")?;
     let reply = Message {
         src: init_msg.dst,
         dst: init_msg.src,
@@ -175,7 +180,7 @@ where
     });
 
     for m in rx {
-        node.step(m).context("Node step function failed")?;
+        node.step(m).await.context("Node step function failed")?;
     }
 
     jh.join()

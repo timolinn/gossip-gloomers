@@ -1,6 +1,7 @@
 use std::{collections::HashMap, sync::Mutex, thread, time::Duration};
 
 use anyhow::Context;
+use async_trait::async_trait;
 use nazgul::{main_loop, Body, Message, Node};
 use serde::{Deserialize, Serialize};
 
@@ -25,8 +26,9 @@ enum Payload {
     ServerReadOk { value: usize },
 }
 
+#[async_trait]
 impl Node<(), Payload> for GrowOnlyCounter {
-    fn from_init(
+    async fn from_init(
         _state: (),
         init: nazgul::Init,
         tx: std::sync::mpsc::Sender<nazgul::Message<Payload>>,
@@ -68,7 +70,7 @@ impl Node<(), Payload> for GrowOnlyCounter {
         Ok(node)
     }
 
-    fn step(&mut self, input: nazgul::Message<Payload>) -> anyhow::Result<()> {
+    async fn step(&mut self, input: nazgul::Message<Payload>) -> anyhow::Result<()> {
         let mut reply = input.into_reply(Some(&mut self.id));
         match reply.body.payload {
             Payload::Add { delta } => {
