@@ -1,12 +1,16 @@
-use std::{collections::HashMap, sync::Mutex, thread, time::Duration};
+use std::{
+    collections::HashMap,
+    sync::{atomic::AtomicUsize, Mutex},
+    thread,
+    time::Duration,
+};
 
 use anyhow::Context;
-use async_trait::async_trait;
 use nazgul::{main_loop, Body, Message, Node};
 use serde::{Deserialize, Serialize};
 
 struct GrowOnlyCounter {
-    id: usize,
+    id: AtomicUsize,
     node: String,
     count: usize,
     node_ids: Vec<String>,
@@ -26,9 +30,8 @@ enum Payload {
     ServerReadOk { value: usize },
 }
 
-#[async_trait]
 impl Node<(), Payload> for GrowOnlyCounter {
-    async fn from_init(
+    fn from_init(
         _state: (),
         init: nazgul::Init,
         tx: std::sync::mpsc::Sender<nazgul::Message<Payload>>,
@@ -37,7 +40,7 @@ impl Node<(), Payload> for GrowOnlyCounter {
         Self: Sized,
     {
         let node = Self {
-            id: 1,
+            id: AtomicUsize::new(1),
             node: init.node_id.clone(),
             count: 0,
             node_ids: init
@@ -70,10 +73,13 @@ impl Node<(), Payload> for GrowOnlyCounter {
         Ok(node)
     }
 
-    async fn step(&mut self, input: nazgul::Message<Payload>) -> anyhow::Result<()> {
-        let mut reply = input.into_reply(Some(&mut self.id));
+    fn step(&self, input: nazgul::Message<Payload>) -> anyhow::Result<()> {
+        let mut reply = input.into_reply(Some(&self.id));
         match reply.body.payload {
             Payload::Add { delta } => {
+                // TODO: needs refactor to use mutable ref
+                // switched to immutable self because of kafka-log
+                // consider smart pointers to get mutable access
                 self.count += delta;
                 reply.body.payload = Payload::AddOk;
                 reply.send(&self.output).context("sending AddOk")?;

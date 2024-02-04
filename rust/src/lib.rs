@@ -1,11 +1,15 @@
+#![allow(dead_code)]
+#![allow(unused_imports)]
+#![allow(unused_variables)]
+
 use anyhow::{Context, Ok};
-use async_trait::async_trait;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::{
-    fmt::{Debug, Display},
-    io::{BufRead, StdoutLock, Write},
-    sync::{mpsc::Sender, Mutex},
-    thread,
+    fmt::Debug,
+    io::{BufRead, Write},
+    sync::{atomic::AtomicUsize, mpsc::Sender, Arc, Mutex},
+    thread::{self, JoinHandle},
+    vec,
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -23,16 +27,12 @@ where
     pub fn new(src: String, dst: String, body: Body<Payload>) -> Self {
         Self { src, dst, body }
     }
-    pub fn into_reply(self, id: Option<&mut usize>) -> Self {
+    pub fn into_reply(self, id: Option<&AtomicUsize>) -> Self {
         Self {
             src: self.dst,
             dst: self.src,
             body: Body {
-                id: id.map(|id| {
-                    let mid = *id; // mut lets us deref
-                    *id += 1;
-                    mid
-                }),
+                id: id.map(|id| id.fetch_add(1, std::sync::atomic::Ordering::SeqCst)),
                 in_reply_to: self.body.id,
                 payload: self.body.payload,
             },
@@ -89,25 +89,23 @@ enum InitPayload {
     InitOk,
 }
 
-#[async_trait]
 pub trait Node<S, Payload> {
-    async fn from_init(state: S, init: Init, tx: Sender<Message<Payload>>) -> anyhow::Result<Self>
+    fn from_init(state: S, init: Init, tx: Sender<Message<Payload>>) -> anyhow::Result<Self>
     where
         Self: Sized;
 
-    async fn step(&mut self, input: Message<Payload>) -> anyhow::Result<()>;
+    fn step(&self, input: Message<Payload>) -> anyhow::Result<()>;
 }
 
-#[async_trait]
 pub trait KV<T>: Send + Sync {
     /// Read returns the value for a given key in the key/value store.
     /// Returns an RPCError error with a KeyDoesNotExist code if the key does not exist.
-    async fn sync_read(&self, key: String, store: &String) -> anyhow::Result<T>
+    fn sync_read(&self, key: impl Into<String>, store: &String) -> anyhow::Result<T>
     where
         T: Deserialize<'static> + Send;
 
     /// Write overwrites the value for a given key in the key/value store.
-    async fn sync_write(&self, key: String, store: &String, val: T) -> anyhow::Result<()>
+    fn sync_write(&self, key: impl Into<String>, store: &String, val: T) -> anyhow::Result<()>
     where
         T: Serialize + Send;
 
@@ -116,9 +114,9 @@ pub trait KV<T>: Send + Sync {
     ///
     /// Returns an RPCError with a code of PreconditionFailed if the previous value
     /// does not match. Return a code of KeyDoesNotExist if the key did not exist.
-    async fn sync_cas(
+    fn sync_cas(
         &self,
-        key: String,
+        key: impl Into<String>,
         store: &String,
         from: T,
         to: T,
@@ -128,10 +126,9 @@ pub trait KV<T>: Send + Sync {
         T: Serialize + Deserialize<'static> + Send;
 }
 
-#[tokio::main]
-pub async fn main_loop<S, N, P>(init_state: S) -> anyhow::Result<()>
+pub fn main_loop<S, N, P>(init_state: S) -> anyhow::Result<()>
 where
-    N: Node<S, P>,
+    N: Node<S, P> + 'static + Send + Sync,
     P: DeserializeOwned + Serialize + Send + 'static + std::marker::Sync,
 {
     let (tx, rx) = std::sync::mpsc::channel::<Message<P>>();
@@ -150,10 +147,9 @@ where
     let InitPayload::Init(init) = init_msg.body.payload else {
         panic!("first message should be init");
     };
-
-    let mut node: N = Node::from_init(init_state, init, tx.clone())
-        .await
-        .context("node initialization failed")?;
+    // Node::from_init(init_state, init, tx.clone()).context("node initialization failed")?
+    let node: Arc<N> =
+        Arc::new(N::from_init(init_state, init, tx.clone()).context("node initialization failed")?);
     let reply = Message {
         src: init_msg.dst,
         dst: init_msg.src,
@@ -172,20 +168,43 @@ where
             let line = line.context("Maelstrom input from STDIN could not be read")?;
             let input: Message<P> = serde_json::from_str(&line)
                 .context("Maelstrom input from STDIN could not deserialised")?;
-
+            eprintln!("LINE => {}", line);
             tx.send(input).context("send input")?;
         }
 
         Ok(())
     });
 
-    for m in rx {
-        node.step(m).await.context("Node step function failed")?;
-    }
+    let jh2 = thread::spawn(move || -> anyhow::Result<()> {
+        loop {
+            let m = rx.recv().context("failed to receive message")?;
+            let node_clone = node.clone();
+            let j = thread::spawn(move || -> anyhow::Result<()> {
+                node_clone.step(m).context("node step failed")?;
+                Ok(())
+            });
+        }
+    });
+    let jhs = vec![jh, jh2];
 
-    jh.join()
-        .expect("stdin thread panicked")
-        .context("stdin thread err'd")?;
+    // for m in rx {
+    //     eprintln!("RX");
+    //     let node_clone = node.clone();
+    //     let j = thread::spawn(move || -> anyhow::Result<()> {
+    //         eprintln!("RX Thread");
+    //         if let Err(e) = node_clone.step(m).context("node step failed") {
+    //             eprintln!("node step failed: {:?}", e.to_string());
+    //         }
+    //         Ok(())
+    //     });
+    //     jhs.push(j);
+    // }
+
+    for jh in jhs {
+        jh.join()
+            .expect("stdin thread panicked")
+            .context("stdin thread err'd")?;
+    }
 
     Ok(())
 }

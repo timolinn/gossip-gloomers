@@ -1,11 +1,9 @@
-use nazgul::*;
+use nazgul::{main_loop, Init, Message, Node};
+use std::sync::atomic::AtomicUsize;
 
 use anyhow::Context;
 use serde::{Deserialize, Serialize};
-use std::{
-    io::{StdoutLock, Write},
-    sync::{mpsc::Sender, Mutex},
-};
+use std::sync::{mpsc::Sender, Mutex};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
@@ -14,10 +12,9 @@ enum Payload {
     Echo { echo: String },
     EchoOk { echo: String },
 }
-use async_trait::async_trait;
 
 struct EchoNode {
-    id: usize,
+    id: AtomicUsize,
     output: Mutex<std::io::Stdout>,
 }
 // { "src": "c1", "dest": "n3", "body": { "type": "init", "msg_id": 1, "node_id": "n3", "node_ids": ["n1", "n2", "n3"] } }
@@ -88,22 +85,19 @@ struct EchoNode {
 // {"src":"c2","dest":"n0","body":{"msg_id":4,"in_reply_to":1,"type":"send", "key":"b","msg": 20}}
 // {"src":"c2","dest":"n0","body":{"msg_id":4,"in_reply_to":1,"type":"poll", "offsets": {"b": 1,"a": 0}}}
 // {"src":"c1","dest":"n0","body":{"msg_id":3,"in_reply_to":1,"type":"commit_offsets", "offsets": {}}}
+// {"src":"lin-kv","dest":"n3","body":{"msg_id":4,"in_reply_to":3,"type":"read_ok", "value":3}}
+// {"src":"lin-kv","dest":"n3","body":{"msg_id":5,"in_reply_to":4,"type":"read_ok", "value":3}}
 
-#[async_trait]
 impl Node<(), Payload> for EchoNode {
-    async fn from_init(
-        _state: (),
-        _init: Init,
-        _tx: Sender<Message<Payload>>,
-    ) -> anyhow::Result<Self> {
+    fn from_init(_state: (), _init: Init, _tx: Sender<Message<Payload>>) -> anyhow::Result<Self> {
         Ok(EchoNode {
-            id: 1,
+            id: AtomicUsize::new(1),
             output: Mutex::new(std::io::stdout()),
         })
     }
 
-    async fn step(&mut self, input: Message<Payload>) -> anyhow::Result<()> {
-        let mut reply = input.into_reply(Some(&mut self.id));
+    fn step(&self, input: Message<Payload>) -> anyhow::Result<()> {
+        let mut reply = input.into_reply(Some(&self.id));
         match reply.body.payload {
             Payload::Echo { echo } => {
                 reply.body.payload = Payload::EchoOk { echo };

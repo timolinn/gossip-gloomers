@@ -3,16 +3,15 @@ use nazgul::*;
 
 use std::{
     collections::HashMap,
-    sync::{mpsc::Sender, Mutex},
+    sync::{atomic::AtomicUsize, mpsc::Sender, Mutex},
     thread,
     time::Duration,
 };
 
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 
 struct BroadcastNode {
-    id: usize,
+    id: AtomicUsize,
     node: String,
     messages: Vec<usize>,
     neighbors: Vec<String>,
@@ -39,9 +38,8 @@ enum Payload {
     TopologyOk,
 }
 
-#[async_trait]
 impl Node<(), Payload> for BroadcastNode {
-    async fn from_init(_state: (), init: Init, tx: Sender<Message<Payload>>) -> anyhow::Result<Self>
+    fn from_init(_state: (), init: Init, tx: Sender<Message<Payload>>) -> anyhow::Result<Self>
     where
         Self: Sized,
     {
@@ -62,7 +60,7 @@ impl Node<(), Payload> for BroadcastNode {
             }
         });
         Ok(BroadcastNode {
-            id: 1,
+            id: AtomicUsize::new(1),
             node: init.node_id,
             messages: Vec::new(),
             neighbors: Vec::new(),
@@ -71,9 +69,9 @@ impl Node<(), Payload> for BroadcastNode {
         })
     }
 
-    async fn step(&mut self, input: Message<Payload>) -> anyhow::Result<()> {
+    fn step(&self, input: Message<Payload>) -> anyhow::Result<()> {
         let src = input.src.clone();
-        let mut reply = input.into_reply(Some(&mut self.id));
+        let mut reply = input.into_reply(Some(&self.id));
         match reply.body.payload {
             Payload::Broadcast { message } => {
                 reply.body.payload = Payload::BroadcastOk;
@@ -89,17 +87,20 @@ impl Node<(), Payload> for BroadcastNode {
                             src: self.node.clone(),
                             dst: neighbor.to_string(),
                             body: Body {
-                                id: Some(self.id),
+                                id: Some(self.id.load(std::sync::atomic::Ordering::Relaxed)),
                                 in_reply_to: None,
                                 payload: Payload::Broadcast { message },
                             },
                         };
-                        self.id += 1;
+                        self.id.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
                         broad_msg
                             .send(&self.output)
                             .context(format!("failed to send message to node: {neighbor}"))?;
 
                         // std::mem::swap(&mut broad_msg.src, &mut broad_msg.dst); // into_reply will swap them
+                        // TODO: needs refactor to use mutable ref
+                        // switched to immutable self because of kafka-log
+                        // consider smart pointers to get mutable access
                         self.waiting_for_ack
                             .insert(broad_msg.body.id.unwrap(), broad_msg);
                     }
@@ -110,6 +111,9 @@ impl Node<(), Payload> for BroadcastNode {
                     return Ok(());
                 };
                 if self.waiting_for_ack.contains_key(&msg_id) {
+                    // TODO: needs refactor to use mutable ref
+                    // switched to immutable self because of kafka-log
+                    // consider smart pointers to get mutable access
                     self.waiting_for_ack
                         .remove(&msg_id)
                         .context("removing message from waiting to ack map")?;
