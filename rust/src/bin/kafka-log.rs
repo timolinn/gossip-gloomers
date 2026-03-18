@@ -118,10 +118,6 @@ impl KafkaLog {
         // register transmitter
         self.rpc.lock().unwrap().insert(msg.body.id.unwrap(), tx);
         msg.send(&self.output).context("sending rpc")?;
-        eprintln!(
-            "Sent|> :dest=>{}, :src=>{}, :body=>[:type=>{:?}, :in_reply_to=>{:?}, :msg_id=>{:?}]",
-            msg.dst, msg.src, msg.body.payload, msg.body.in_reply_to, msg.body.id
-        );
         Ok(rx.recv()?)
     }
 }
@@ -201,12 +197,8 @@ impl Node<(), Payload> for KafkaLog {
         })
     }
 
-    // Switched to immutable self to get around borrow checker
-    // which wasn't allowing me to share node between threads
-    // with Arc in lib.rs
     fn step(&self, input: nazgul::Message<Payload>) -> anyhow::Result<()> {
         if input.body.in_reply_to.is_some() {
-            // eprintln!("Found in reply to|> {:?}", input);
             let tx = self
                 .rpc
                 .lock()

@@ -48,10 +48,6 @@ where
         out.lock()
             .write_all(b"\n")
             .context("failed to write new line")?;
-        // eprintln!(
-        //     "Sent|> :dest=>{}, :src=>{}, :body=>[:type=>{:?}, :in_reply_to=>{:?}, :msg_id=>{:?}]",
-        //     self.dst, self.src, self.body.payload, self.body.in_reply_to, self.body.id
-        // );
         Ok(())
     }
 
@@ -147,7 +143,6 @@ where
     let InitPayload::Init(init) = init_msg.body.payload else {
         panic!("first message should be init");
     };
-    // Node::from_init(init_state, init, tx.clone()).context("node initialization failed")?
     let node: Arc<N> =
         Arc::new(N::from_init(init_state, init, tx.clone()).context("node initialization failed")?);
     let reply = Message {
@@ -186,19 +181,6 @@ where
         }
     });
     let jhs = vec![jh, jh2];
-
-    // for m in rx {
-    //     eprintln!("RX");
-    //     let node_clone = node.clone();
-    //     let j = thread::spawn(move || -> anyhow::Result<()> {
-    //         eprintln!("RX Thread");
-    //         if let Err(e) = node_clone.step(m).context("node step failed") {
-    //             eprintln!("node step failed: {:?}", e.to_string());
-    //         }
-    //         Ok(())
-    //     });
-    //     jhs.push(j);
-    // }
 
     for jh in jhs {
         jh.join()

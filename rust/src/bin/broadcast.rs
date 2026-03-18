@@ -133,11 +133,6 @@ impl Node<(), Payload> for BroadcastNode {
                 reply.send(&self.output).context("failed to send message")?;
             }
             Payload::BroadcastUnAcked => {
-                // let l = self
-                //     .waiting_for_ack
-                //     .iter()
-                //     .map(|x| x.1)
-                //     .collect::<Vec<&Message<Payload>>>();
                 for m in self.waiting_for_ack.values() {
                     m.send(&self.output).context("failed to send message")?;
                 }
